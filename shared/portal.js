@@ -158,13 +158,9 @@
 
   // ── ECRÃS DE ESTADO ───────────────────────────────────────
   function mostrarEcrãLogin() {
-    mostrarOverlay(
-      'Acesso restrito',
-      'Este exercício requer autenticação. Inicia sessão no portal para continuar.',
-      [
-        { label: 'Ir para o portal', url: 'https://novoimobiliario.com/portal', primary: true }
-      ]
-    );
+    // Redirigir para o portal com o URL actual como parâmetro de retorno
+    const returnUrl = encodeURIComponent(window.location.href);
+    window.location.href = 'https://cpcv.pt/portal.html?return=' + returnUrl;
   }
 
   function mostrarEcrãExpirado() {
