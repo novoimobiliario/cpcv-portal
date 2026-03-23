@@ -191,7 +191,7 @@
       window.location.href = 'https://cpcv.pt/portal.html#perfil';
     },
 
-  init: function(opts) {
+    init: function(opts) {
       opts = opts || {};
 
       // Injectar CSS
