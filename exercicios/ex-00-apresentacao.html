@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A tua apresentação · CPCV</title>
+
+  <!--
+    Exercício: A tua apresentação
+    Código:    ex-00-apresentacao
+    UUID:      9090fcf1-23ef-4d97-8001-501bd8cd6ab5
+    Módulo:    00 · Sessão de boas-vindas
+    Nível:     start (mínimo)
+    Versão:    1.0.0 · Março 2026
+  -->
+
+  <!-- Identificação do exercício (lida pelo portal.js) -->
+  <meta name="cpcv-exercicio-id" content="9090fcf1-23ef-4d97-8001-501bd8cd6ab5">
+  <meta name="cpcv-nivel-minimo" content="start">
+
+  <!-- Fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&family=Instrument+Serif&display=swap" rel="stylesheet">
+
+  <!-- Design system partilhado -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/novoimobiliario/cpcv-portal@main/shared/portal.css">
+
+  <!-- CSS específico deste exercício -->
+  <style>
+    /* ── CAMPOS DE RESPOSTA ── */
+    .apres-bloco {
+      margin-bottom: 28px;
+    }
+    .apres-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      font-weight: 500;
+      color: var(--text-faint);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .apres-sublabel {
+      font-size: 12px;
+      color: var(--text-faint);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .apres-textarea {
+      width: 100%;
+      min-height: 100px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      resize: vertical;
+      line-height: 1.6;
+      transition: border-color .15s;
+    }
+    .apres-textarea:focus { border-color: var(--accent); }
+    .apres-textarea::placeholder { color: var(--text-faint); }
+
+    /* ── RESULTADO DA IA ── */
+    .apres-resultado {
+      background: var(--bg2);
+      border: 1px solid rgba(201,169,110,.25);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-top: 24px;
+    }
+    .apres-resultado-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      color: var(--accent);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .apres-resultado-texto {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.8;
+      outline: none;
+    }
+    .apres-resultado-texto p { margin-bottom: 10px; }
+    .apres-resultado-texto strong { color: var(--accent); }
+
+    /* ── CONTADOR ── */
+    .char-count {
+      font-size: 10px;
+      color: var(--text-faint);
+      text-align: right;
+      margin-top: 4px;
+      font-family: 'DM Mono', monospace;
+    }
+    .char-count.aviso { color: var(--accent); }
+
+    /* ── BOTÕES ── */
+    .apres-acoes {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .apres-msg {
+      font-size: 12px;
+      min-height: 16px;
+    }
+  </style>
+</head>
+
+<!--
+  data-exercicio-id: lido pelo portal.js para verificar acesso
+-->
+<body data-exercicio-id="9090fcf1-23ef-4d97-8001-501bd8cd6ab5">
+
+  <!-- Topbar -->
+  <div id="topbar" style="position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;background:var(--bg2);border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);font-weight:500">Ecossistema CPCV</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <span style="font-size:12px;color:var(--text-faint)" id="topbar-creditos">— cr.</span>
+      <div id="topbar-user" style="width:32px;height:32px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--text-muted);font-family:'DM Mono',monospace"></div>
+    </div>
+  </div>
+
+  <!-- Conteúdo principal -->
+  <main>
+    <div class="ex-wrap-narrow fade-in" id="ex-conteudo" style="display:none">
+
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <span class="breadcrumb-current">Módulo 00 · Sessão de boas-vindas</span>
+      </div>
+
+      <!-- Cabeçalho -->
+      <div class="ex-header">
+        <div class="ex-badge">Exercício · A tua apresentação</div>
+        <h1>Como te apresentas?</h1>
+        <p class="ex-desc">
+          Responde às perguntas abaixo com honestidade. A IA vai gerar uma apresentação profissional
+          baseada nas tuas respostas — que podes editar e guardar como a tua apresentação oficial.
+        </p>
+      </div>
+
+      <!-- Pergunta 1 -->
+      <div class="apres-bloco">
+        <div class="apres-label">Qual é o teu nome e onde actuas?</div>
+        <div class="apres-sublabel">Cidade, zona, tipo de mercado. Ex: "Sou o Daniel, trabalho em Lisboa, principalmente em Cascais e Sintra."</div>
+        <textarea class="apres-textarea" id="apres-q1" placeholder="Escreve aqui..." rows="3" maxlength="500" oninput="atualizarContador('apres-q1','cnt-q1',500)"></textarea>
+        <div class="char-count" id="cnt-q1">0 / 500</div>
+      </div>
+
+      <!-- Pergunta 2 -->
+      <div class="apres-bloco">
+        <div class="apres-label">O que fazias antes de ser consultor imobiliário?</div>
+        <div class="apres-sublabel">Experiência anterior, percurso. Mesmo que não tenhas ligação directa ao imobiliário — é exactamente isso que te torna único.</div>
+        <textarea class="apres-textarea" id="apres-q2" placeholder="Escreve aqui..." rows="3" maxlength="500" oninput="atualizarContador('apres-q2','cnt-q2',500)"></textarea>
+        <div class="char-count" id="cnt-q2">0 / 500</div>
+      </div>
+
+      <!-- Pergunta 3 -->
+      <div class="apres-bloco">
+        <div class="apres-label">O que te levou a entrar no imobiliário?</div>
+        <div class="apres-sublabel">O momento, a razão, o que esperavas. Pode ser uma história, uma frase, um sentimento.</div>
+        <textarea class="apres-textarea" id="apres-q3" placeholder="Escreve aqui..." rows="3" maxlength="500" oninput="atualizarContador('apres-q3','cnt-q3',500)"></textarea>
+        <div class="char-count" id="cnt-q3">0 / 500</div>
+      </div>
+
+      <!-- Pergunta 4 -->
+      <div class="apres-bloco">
+        <div class="apres-label">Como descreves a tua forma de trabalhar?</div>
+        <div class="apres-sublabel">Como tratas os clientes? O que é diferente em ti? O que valorizas no teu trabalho?</div>
+        <textarea class="apres-textarea" id="apres-q4" placeholder="Escreve aqui..." rows="4" maxlength="800" oninput="atualizarContador('apres-q4','cnt-q4',800)"></textarea>
+        <div class="char-count" id="cnt-q4">0 / 800</div>
+      </div>
+
+      <!-- Acções -->
+      <div class="apres-acoes">
+        <button class="btn btn-primary" id="btn-gerar" onclick="gerarApresentacao()">
+          🤖 Gerar apresentação com IA
+        </button>
+        <button class="btn btn-secondary" id="btn-guardar" onclick="guardarApresentacao()" style="display:none">
+          Guardar
+        </button>
+        <span class="apres-msg" id="apres-msg"></span>
+      </div>
+
+      <!-- Resultado da IA -->
+      <div class="apres-resultado" id="apres-resultado" style="display:none">
+        <div class="apres-resultado-label">
+          <span>A tua apresentação</span>
+          <button onclick="copiarApresentacao()" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);font-family:'DM Sans',sans-serif">Copiar</button>
+        </div>
+        <div class="apres-resultado-texto" id="apres-texto" contenteditable="true"></div>
+      </div>
+
+    </div>
+
+    <!-- Ecrã de carregamento -->
+    <div id="ex-loading" style="display:flex;align-items:center;justify-content:center;height:60vh">
+      <div style="text-align:center">
+        <div style="width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px"></div>
+        <div style="font-size:13px;color:var(--text-faint)">A verificar acesso...</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Debug footer -->
+  <div class="debug-footer">
+    <div class="df-left">
+      <span class="df-tag">ex-00-apresentacao</span>
+      <span class="df-sep">·</span>
+      <span>v1.0.0</span>
+    </div>
+    <div class="df-right">
+      <span id="df-nivel">—</span>
+      <span class="df-sep">·</span>
+      <span id="df-acesso">—</span>
+    </div>
+  </div>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <!-- Portal.js (auth + acesso) -->
+  <script src="https://cdn.jsdelivr.net/gh/novoimobiliario/cpcv-portal@main/shared/portal.js"></script>
+
+  <!-- Lógica do exercício -->
+  <script>
+    const EX_ID = '9090fcf1-23ef-4d97-8001-501bd8cd6ab5';
+
+    // ── QUANDO O PORTAL ESTÁ PRONTO ──────────────────────────
+    document.addEventListener('cpcv:pronto', function (e) {
+      const { acesso, nivel, user } = e.detail;
+
+      // Actualizar debug footer
+      document.getElementById('df-nivel').textContent = nivel;
+      document.getElementById('df-acesso').textContent = acesso;
+
+      // Esconder loading
+      document.getElementById('ex-loading').style.display = 'none';
+
+      // Se sem acesso, o overlay já foi mostrado pelo portal.js
+      if (acesso === 'sem_acesso' || acesso === 'expirado') return;
+
+      // Mostrar conteúdo
+      document.getElementById('ex-conteudo').style.display = 'block';
+
+      // Carregar respostas guardadas
+      carregarRespostas();
+    });
+
+    // ── CARREGAR RESPOSTAS GUARDADAS ─────────────────────────
+    async function carregarRespostas() {
+      const sb = window.CPCV.sb;
+      const user = window.CPCV.user;
+      if (!sb || !user) return;
+
+      const { data } = await sb
+        .from('respostas')
+        .select('resposta_json')
+        .eq('user_id', user.id)
+        .eq('exercicio_id', EX_ID)
+        .maybeSingle();
+
+      if (!data || !data.resposta_json) return;
+
+      const r = data.resposta_json;
+      if (r.q1) { document.getElementById('apres-q1').value = r.q1; atualizarContador('apres-q1','cnt-q1',500); }
+      if (r.q2) { document.getElementById('apres-q2').value = r.q2; atualizarContador('apres-q2','cnt-q2',500); }
+      if (r.q3) { document.getElementById('apres-q3').value = r.q3; atualizarContador('apres-q3','cnt-q3',500); }
+      if (r.q4) { document.getElementById('apres-q4').value = r.q4; atualizarContador('apres-q4','cnt-q4',800); }
+
+      if (r.apresentacao) {
+        document.getElementById('apres-texto').innerHTML = r.apresentacao;
+        document.getElementById('apres-resultado').style.display = 'block';
+        document.getElementById('btn-guardar').style.display = 'inline-flex';
+      }
+    }
+
+    // ── GERAR APRESENTAÇÃO COM IA ─────────────────────────────
+    async function gerarApresentacao() {
+      const q1 = document.getElementById('apres-q1').value.trim();
+      const q2 = document.getElementById('apres-q2').value.trim();
+      const q3 = document.getElementById('apres-q3').value.trim();
+      const q4 = document.getElementById('apres-q4').value.trim();
+
+      if (!q1 && !q2 && !q3 && !q4) {
+        mostrarMsg('Preenche pelo menos uma resposta antes de gerar.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-gerar');
+      btn.disabled = true;
+      btn.textContent = 'A gerar...';
+      mostrarMsg('', '');
+
+      const nome = window._perfilNome || 'consultor';
+
+      const prompt =
+        'Cria uma apresentação profissional e autêntica para ' + nome + ', consultor imobiliário, ' +
+        'com base nas suas respostas. Deve ser natural, na primeira pessoa, sem clichês imobiliários. ' +
+        'Máximo 250 palavras. Formato HTML simples (p, strong). Português Europeu.\n\n' +
+        (q1 ? 'Nome e zona de actuação: ' + q1 + '\n' : '') +
+        (q2 ? 'Percurso anterior: ' + q2 + '\n' : '') +
+        (q3 ? 'O que o levou ao imobiliário: ' + q3 + '\n' : '') +
+        (q4 ? 'Forma de trabalhar: ' + q4 + '\n' : '');
+
+      try {
+        const texto = await window.CPCV.usarIA({
+          mensagens: [{ role: 'user', content: prompt }],
+          ferramenta: 'apresentacao',
+          maxTokens: 600,
+        });
+
+        document.getElementById('apres-texto').innerHTML = texto;
+        document.getElementById('apres-resultado').style.display = 'block';
+        document.getElementById('btn-guardar').style.display = 'inline-flex';
+        mostrarMsg('✓ Apresentação gerada! Podes editar directamente.', 'success');
+        await guardarApresentacao(true); // guardar automaticamente
+      } catch (e) {
+        if (e.message === 'sem_creditos') {
+          mostrarMsg('Sem créditos IA. Contacta o suporte.', 'error');
+        } else {
+          mostrarMsg('Erro ao gerar: ' + e.message, 'error');
+        }
+      }
+
+      btn.disabled = false;
+      btn.textContent = '🤖 Gerar apresentação com IA';
+    }
+
+    // ── GUARDAR ───────────────────────────────────────────────
+    async function guardarApresentacao(silencioso = false) {
+      const sb = window.CPCV.sb;
+      const user = window.CPCV.user;
+      if (!sb || !user) return;
+
+      const btn = document.getElementById('btn-guardar');
+      if (!silencioso && btn) { btn.disabled = true; btn.textContent = 'A guardar...'; }
+
+      const dados = {
+        q1: document.getElementById('apres-q1').value,
+        q2: document.getElementById('apres-q2').value,
+        q3: document.getElementById('apres-q3').value,
+        q4: document.getElementById('apres-q4').value,
+        apresentacao: document.getElementById('apres-texto').innerHTML,
+      };
+
+      const { error } = await sb.from('respostas').upsert({
+        user_id:       user.id,
+        exercicio_id:  EX_ID,
+        resposta_json: dados,
+      }, { onConflict: 'user_id,exercicio_id' });
+
+      if (!silencioso) {
+        if (error) {
+          mostrarMsg('Erro ao guardar: ' + error.message, 'error');
+        } else {
+          mostrarMsg('✓ Guardado!', 'success');
+          setTimeout(() => mostrarMsg('', ''), 2000);
+        }
+        if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
+      }
+    }
+
+    // ── COPIAR ────────────────────────────────────────────────
+    function copiarApresentacao() {
+      const texto = document.getElementById('apres-texto').innerText;
+      navigator.clipboard.writeText(texto).then(() => {
+        mostrarMsg('✓ Copiado!', 'success');
+        setTimeout(() => mostrarMsg('', ''), 2000);
+      });
+    }
+
+    // ── UTILITÁRIOS ───────────────────────────────────────────
+    function atualizarContador(fieldId, cntId, max) {
+      const val = document.getElementById(fieldId).value.length;
+      const cnt = document.getElementById(cntId);
+      cnt.textContent = val + ' / ' + max;
+      cnt.classList.toggle('aviso', val > max * 0.9);
+    }
+
+    function mostrarMsg(texto, tipo) {
+      const el = document.getElementById('apres-msg');
+      el.textContent = texto;
+      el.style.color = tipo === 'success' ? 'var(--success)' : tipo === 'error' ? '#e05c5c' : 'var(--text-faint)';
+    }
+  </script>
+
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+
+</body>
+</html>
