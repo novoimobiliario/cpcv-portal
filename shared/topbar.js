@@ -173,7 +173,7 @@
     <span class="cpcv-tb-cred-val" id="cpcv-tb-cred-val">—</span>
     <button class="cpcv-tb-cred-btn" id="cpcv-tb-cred-btn" onclick="CPCVTopbar._onComprar()">Comprar</button>
   </div>
-  <div class="cpcv-tb-avatar" id="cpcv-tb-avatar" title="A minha conta">??</div>
+  <div class="cpcv-tb-avatar" id="cpcv-tb-avatar" onclick="CPCVTopbar._onAvatar()" title="Área de utilizador" style="cursor:pointer">??</div>
   <button class="cpcv-tb-back" onclick="history.back()" title="Voltar ao portal">
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
       <path d="M10 14H13a1 1 0 001-1V3a1 1 0 00-1-1h-3M6 11l-3-3 3-3M3 8h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -186,7 +186,12 @@
   window.CPCVTopbar = {
     _onComprar: function() {},
 
-    init: function(opts) {
+    _onAvatar: function() {
+      // Voltar ao portal na secção perfil — pode ser sobreposto via opts.onAvatar
+      window.location.href = 'https://cpcv.pt/portal.html#perfil';
+    },
+
+  init: function(opts) {
       opts = opts || {};
 
       // Injectar CSS
@@ -205,6 +210,7 @@
 
       // Callback comprar
       if (opts.onComprar) this._onComprar = opts.onComprar;
+      if (opts.onAvatar) this._onAvatar = opts.onAvatar;
     },
 
     // Actualizar créditos na topbar
@@ -233,7 +239,9 @@
     showPreview: function(estimativa) {
       const el = document.getElementById('cpcv-tb-cred-preview');
       if (!el) return;
-      el.textContent = '~' + estimativa + ' cr.';
+      const val = parseInt(estimativa);
+      if (isNaN(val) || val <= 0) return; // nunca mostrar valores inválidos
+      el.textContent = '~' + val.toLocaleString('pt-PT') + ' cr.';
       el.style.display = 'inline';
     },
 
