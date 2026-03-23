@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A tua apresentação · CPCV</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/novoimobiliario/cpcv-portal@main/shared/portal.css">
+</head>
+<body
+  data-cpcv-exercicio="9090fcf1-23ef-4d97-8001-501bd8cd6ab5"
+  data-cpcv-login="/login.html"
+>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="/portal.html" class="btn-back">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+        <path d="M10 13L5 8L10 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Portal
+    </a>
+    <span class="topbar-badge">Módulo 00 · Exercício</span>
+    <span class="topbar-title">A tua apresentação</span>
+  </div>
+  <div class="topbar-right">
+    <span class="topbar-user" id="user-nome"></span>
+  </div>
+</div>
+
+<!-- CONTEÚDO -->
+<div class="wrap fade-in">
+
+  <div class="ex-header">
+    <div class="ex-label">Exercício 00.1</div>
+    <h1 class="ex-title">A tua apresentação</h1>
+    <p class="ex-desc">Responde às perguntas abaixo. Com base nas tuas respostas, a IA gera duas versões da tua apresentação profissional — uma longa e uma curta.</p>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress" style="width:0%"></div>
+  </div>
+
+  <div id="badge-guardado" style="display:none">
+    <div class="badge-guardado">
+      <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
+        <path d="M3 8l4 4 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Resposta guardada anteriormente
+    </div>
+  </div>
+
+  <div data-cpcv-nivel="comunidade">
+    <div class="form-group">
+
+      <div class="row-2">
+        <div class="field">
+          <label>O teu nome</label>
+          <input type="text" id="ap-nome" placeholder="Ex: Ana Ferreira">
+        </div>
+        <div class="field">
+          <label>Anos de experiência</label>
+          <input type="number" id="ap-anos" placeholder="Ex: 3" min="0" max="50">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Zona geográfica onde actuas</label>
+        <input type="text" id="ap-zona" placeholder="Ex: Lisboa, Cascais e Sintra">
+      </div>
+
+      <div class="field">
+        <label>2.1 · Qual é a tua principal crença sobre o mercado imobiliário?</label>
+        <textarea id="ap-crenca" placeholder="Ex: Acredito que o mercado imobiliário é a base da construção de riqueza sustentável..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>2.2 · Como te apresentas em poucas palavras?</label>
+        <textarea id="ap-apresentacao" placeholder="Ex: Sou consultor imobiliário especializado em..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>2.3 · Porquê o imobiliário?</label>
+        <textarea id="ap-porque" placeholder="O que te trouxe ao imobiliário..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>2.4 · Que experiência ou formação anterior acrescenta valor ao teu trabalho?</label>
+        <textarea id="ap-exp-anterior" placeholder="Ex: Antes do imobiliário trabalhei em..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>2.5 · Qual a tua experiência no mercado imobiliário até hoje?</label>
+        <textarea id="ap-exp-mercado" placeholder="Tipos de imóveis, perfis de clientes, operações relevantes..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>2.6 · O que te diferencia dos outros consultores?</label>
+        <textarea id="ap-diferenciacao" placeholder="O que fazes de forma diferente ou melhor..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>2.7 · Notas adicionais (opcional)</label>
+        <textarea id="ap-notas" placeholder="Qualquer outra coisa que queiras incluir..."></textarea>
+      </div>
+
+    </div>
+
+    <div style="margin-top:32px">
+      <button class="btn-primary" id="btn-gerar" onclick="gerarApresentacao()">
+        Gerar apresentação com IA
+      </button>
+    </div>
+  </div>
+
+  <div class="estado-gerando" id="gerando">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <p>A IA está a construir a tua apresentação...</p>
+  </div>
+
+  <div class="resultado" id="resultado">
+    <hr class="divider">
+    <div class="resultado-label">Resultado gerado pela IA</div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="mudarTab('longa', this)">Apresentação longa</button>
+      <button class="tab-btn" onclick="mudarTab('curta', this)">Apresentação curta</button>
+    </div>
+
+    <div class="tab-pane active" id="tab-longa">
+      <div class="texto-resultado" id="texto-longo"></div>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="btn-ghost" onclick="copiar('longa')">Copiar</button>
+        <button class="btn-primary" style="width:auto;padding:9px 20px" onclick="guardarResposta()">Guardar</button>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="tab-curta">
+      <div class="texto-resultado" id="texto-curto"></div>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="btn-ghost" onclick="copiar('curta')">Copiar</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/gh/novoimobiliario/cpcv-portal@main/shared/portal.js"></script>
+<script>
+const SUPABASE_URL  = 'https://zsfgnzowdkwupsevsjbr.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzZmduem93ZGt3dXBzZXZzamJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMzcyMTIsImV4cCI6MjA4OTYxMzIxMn0.nQIQnwIdVZjoTPOVmDNIAbS7_jT5WxYs9DBGQWV2CEw';
+
+let textoLongo = '';
+let textoCurto = '';
+const exercicioId = document.body.dataset.cpcvExercicio;
+
+document.addEventListener('cpcv:pronto', async ({ detail: cpcv }) => {
+  document.getElementById('user-nome').textContent = cpcv.user.nome;
+  actualizarProgresso();
+  await carregarResposta(cpcv);
+});
+
+const camposProgresso = ['ap-nome','ap-anos','ap-zona','ap-crenca','ap-apresentacao','ap-porque','ap-exp-anterior','ap-exp-mercado','ap-diferenciacao'];
+
+function actualizarProgresso() {
+  const preenchidos = camposProgresso.filter(id => {
+    const el = document.getElementById(id);
+    return el && el.value.trim().length > 0;
+  }).length;
+  document.getElementById('progress').style.width = Math.round((preenchidos / camposProgresso.length) * 100) + '%';
+}
+
+document.querySelectorAll('textarea, input').forEach(el => el.addEventListener('input', actualizarProgresso));
+
+function getJwt() {
+  try {
+    const key = Object.keys(localStorage).find(k => k.endsWith('-auth-token'));
+    return key ? JSON.parse(localStorage.getItem(key)).access_token : null;
+  } catch { return null; }
+}
+
+async function carregarResposta(cpcv) {
+  try {
+    const jwt = getJwt();
+    if (!jwt) return;
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/respostas?user_id=eq.${cpcv.user.id}&exercicio_id=eq.${exercicioId}&select=resposta_json&limit=1`,
+      { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${jwt}` } }
+    );
+    const rows = await res.json();
+    if (!rows?.[0]) return;
+    const r = rows[0].resposta_json;
+    document.getElementById('badge-guardado').style.display = 'block';
+    const mapa = {
+      'ap-nome': r.nome, 'ap-anos': r.anos, 'ap-zona': r.zona,
+      'ap-crenca': r.crenca, 'ap-apresentacao': r.apresentacao,
+      'ap-porque': r.porque_imobiliario, 'ap-exp-anterior': r.experiencia_anterior,
+      'ap-exp-mercado': r.experiencia_mercado, 'ap-diferenciacao': r.diferenciacao,
+      'ap-notas': r.notas,
+    };
+    Object.entries(mapa).forEach(([id, val]) => { const el = document.getElementById(id); if (el && val) el.value = val; });
+    if (r.texto_longo || r.texto_curto) {
+      textoLongo = r.texto_longo || '';
+      textoCurto = r.texto_curto || '';
+      mostrarResultado();
+    }
+    actualizarProgresso();
+  } catch(e) { console.error(e); }
+}
+
+function lerCampos() {
+  return {
+    nome: document.getElementById('ap-nome').value.trim(),
+    anos: document.getElementById('ap-anos').value.trim(),
+    zona: document.getElementById('ap-zona').value.trim(),
+    crenca: document.getElementById('ap-crenca').value.trim(),
+    apresentacao: document.getElementById('ap-apresentacao').value.trim(),
+    porque_imobiliario: document.getElementById('ap-porque').value.trim(),
+    experiencia_anterior: document.getElementById('ap-exp-anterior').value.trim(),
+    experiencia_mercado: document.getElementById('ap-exp-mercado').value.trim(),
+    diferenciacao: document.getElementById('ap-diferenciacao').value.trim(),
+    notas: document.getElementById('ap-notas').value.trim(),
+  };
+}
+
+async function gerarApresentacao() {
+  const cpcv = window.CPCV;
+  if (!cpcv) return;
+  const dados = lerCampos();
+  if (!dados.nome || !dados.crenca || !dados.apresentacao) {
+    mostrarToast('Preenche pelo menos o nome, a crença e a apresentação.');
+    return;
+  }
+
+  document.getElementById('btn-gerar').disabled = true;
+  document.getElementById('gerando').classList.add('visible');
+  document.getElementById('resultado').classList.remove('visible');
+
+  const prompt = `Cria duas apresentações profissionais para um consultor imobiliário com base nestes dados:
+
+Nome: ${dados.nome}
+Anos de experiência: ${dados.anos}
+Zona: ${dados.zona}
+Crença sobre o mercado: ${dados.crenca}
+Como se apresenta: ${dados.apresentacao}
+Porquê o imobiliário: ${dados.porque_imobiliario}
+Experiência anterior: ${dados.experiencia_anterior}
+Experiência no mercado: ${dados.experiencia_mercado}
+Diferenciação: ${dados.diferenciacao}
+Notas adicionais: ${dados.notas}
+
+Regras:
+- Escreve em português europeu, na primeira pessoa
+- Tom pessoal, profissional, com conexão emocional
+- Sem gerúndios
+- Dá espaço à personalidade do consultor
+- Termina com chamada à acção para contacto directo
+- Entrega em HTML formatado (usa <p>, <strong>, <br> — sem CSS externo)
+
+Formato obrigatório:
+APRESENTAÇÃO LONGA:
+[html aqui]
+
+APRESENTAÇÃO CURTA:
+[html aqui]`;
+
+  try {
+    const resposta = await cpcv.usarIA({ messages: [{ role: 'user', content: prompt }], ferramenta: 'ex-00-apresentacao' });
+    const conteudo = resposta?.content?.[0]?.text || '';
+    const matchLonga = conteudo.match(/APRESENTAÇÃO LONGA:\s*([\s\S]*?)(?=APRESENTAÇÃO CURTA:|$)/i);
+    const matchCurta = conteudo.match(/APRESENTAÇÃO CURTA:\s*([\s\S]*?)$/i);
+    textoLongo = matchLonga ? matchLonga[1].trim() : conteudo;
+    textoCurto = matchCurta ? matchCurta[1].trim() : '';
+    await guardarSupabase({ ...dados, texto_longo: textoLongo, texto_curto: textoCurto });
+    mostrarResultado();
+    mostrarToast('Apresentação gerada e guardada.');
+  } catch(e) {
+    mostrarToast(e.message === 'sem_creditos' ? 'Sem créditos disponíveis.' : 'Erro ao gerar. Tenta novamente.');
+    console.error(e);
+  } finally {
+    document.getElementById('btn-gerar').disabled = false;
+    document.getElementById('gerando').classList.remove('visible');
+  }
+}
+
+function mostrarResultado() {
+  document.getElementById('texto-longo').innerHTML = textoLongo;
+  document.getElementById('texto-curto').innerHTML = textoCurto;
+  document.getElementById('resultado').classList.add('visible');
+  document.getElementById('resultado').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function mudarTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function copiar(tab) {
+  const el = document.getElementById('texto-' + (tab === 'longa' ? 'longo' : 'curto'));
+  navigator.clipboard.writeText(el.innerText || el.textContent)
+    .then(() => mostrarToast('Copiado.'))
+    .catch(() => mostrarToast('Não foi possível copiar.'));
+}
+
+async function guardarSupabase(dados) {
+  const jwt = getJwt();
+  const cpcv = window.CPCV;
+  if (!jwt || !cpcv) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/respostas`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON,
+      Authorization: `Bearer ${jwt}`,
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=merge-duplicates',
+    },
+    body: JSON.stringify({
+      user_id: cpcv.user.id,
+      exercicio_id: exercicioId,
+      resposta_json: dados,
+    }),
+  });
+}
+
+async function guardarResposta() {
+  await guardarSupabase({ ...lerCampos(), texto_longo: textoLongo, texto_curto: textoCurto });
+  mostrarToast('Guardado.');
+}
+
+function mostrarToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+
+</body>
+</html>
