@@ -14,13 +14,13 @@
   --bg3:   #1c1c1a;
 
   /* Bordas */
-  --border: rgba(255,255,255,0.07);
-  --bh:     rgba(255,255,255,0.14);
+  --border: rgba(255,255,255,0.10);  /* era .07 — mais visível */
+  --bh:     rgba(255,255,255,0.20);  /* era .14 */
 
   /* Texto */
   --text:   #f0ede8;
-  --muted:  #8a8880;
-  --faint:  #4a4845;
+  --muted:  #a8a5a0;   /* era #8a8880 — melhorado para ratio 5.5:1 */
+  --faint:  #6a6865;   /* era #4a4845 — melhorado para ratio 3.5:1 */
 
   /* Dourado (accent) */
   --accent: #c9a96e;
@@ -41,7 +41,7 @@
 
   /* Títulos de secção */
   --sec:      #c9a96e;
-  --sec-size: 11px;
+  --sec-size: 12px;  /* aumentado de 11px para melhor leitura */
 }
 
 /* ── RESET ─────────────────────────────────────────────── */
@@ -108,7 +108,7 @@ body {
 
 /* Badges de role */
 .rb { font-family: 'DM Mono', monospace; font-size: 9px; padding: 2px 7px; border-radius: 4px; letter-spacing: .06em; text-transform: uppercase; }
-.rb-a { color: var(--accent); border: 1px solid rgba(201,169,110,.25); }
+.rb-a { color: var(--accent); border: 1px solid rgba(201,169,110,.40); }
 .rb-o { color: var(--ok);     border: 1px solid rgba(74,158,107,.25); }
 
 /* Navegação */
@@ -191,14 +191,14 @@ body {
    ══════════════════════════════════════════════════════════ */
 .stats-grid { display: grid; gap: 10px; margin-bottom: 28px; }
 .sc { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--rl); padding: 16px 18px; }
-.sc-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--faint); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
+.sc-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--faint); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
 .sc-val { font-family: 'Instrument Serif', serif; font-size: 26px; font-weight: 400; letter-spacing: -.02em; }
 .sc-val.gold  { color: var(--accent); }
 .sc-val.green { color: var(--ok); }
 .sc-val.dim   { color: var(--muted); }
 
 /* compat com versão anterior */
-.sl  { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--faint); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+.sl  { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--faint); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
 .sv  { font-family: 'Instrument Serif', serif; font-size: 26px; font-weight: 400; letter-spacing: -.02em; }
 .sv.ac { color: var(--accent); }
 
@@ -297,8 +297,8 @@ thead th {
   padding: 10px 16px;
   text-align: left;
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  color: rgba(240,237,232,.75);
+  font-size: 10px;
+  color: rgba(240,237,232,.85);  /* mais contrastante */
   letter-spacing: .07em;
   text-transform: uppercase;
   font-weight: 400;
@@ -310,7 +310,7 @@ thead th:hover { color: var(--text); }
 tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; cursor: pointer; }
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: var(--bg3); }
-tbody td { padding: 11px 16px; font-size: 13px; color: var(--text); }
+tbody td { padding: 12px 16px; font-size: 14px; color: var(--text); }
 
 /* ══════════════════════════════════════════════════════════
    BADGES
@@ -318,9 +318,9 @@ tbody td { padding: 11px 16px; font-size: 13px; color: var(--text); }
 .badge {
   display: inline-flex;
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 500;
-  padding: 2px 8px;
+  padding: 3px 9px;
   border-radius: 4px;
   letter-spacing: .04em;
   text-transform: uppercase;
@@ -438,7 +438,7 @@ tbody td { padding: 11px 16px; font-size: 13px; color: var(--text); }
 .db { font-size: 12px; color: var(--accent); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 4px; margin-bottom: 10px; opacity: .8; padding: 0; }
 .db:hover { opacity: 1; }
 .dn { font-family: 'Instrument Serif', serif; font-size: 22px; font-weight: 400; letter-spacing: -.02em; }
-.de { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.de { font-size: 13px; color: var(--muted); margin-top: 2px; }
 .dc { max-width: 760px; margin: 0 auto; padding: 24px 24px 80px; width: 100%; }
 
 /* ══════════════════════════════════════════════════════════
@@ -483,7 +483,7 @@ tbody td { padding: 11px 16px; font-size: 13px; color: var(--text); }
 .t-formulario{ background: var(--adim2);           color: var(--accent); }
 .rinfo { flex: 1; }
 .rtit  { font-size: 13px; color: var(--text); }
-.rdesc { font-size: 11px; color: var(--faint); margin-top: 2px; }
+.rdesc { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .rniv  { font-family: 'DM Mono', monospace; font-size: 9px; padding: 2px 6px; border-radius: 3px; }
 .n-mais  { background: var(--adim); color: var(--accent); }
 .n-start { color: var(--faint); }
@@ -531,7 +531,7 @@ tbody td { padding: 11px 16px; font-size: 13px; color: var(--text); }
   cursor: pointer; transition: border-color .12s;
 }
 .pag-btn:hover { border-color: var(--bh); color: var(--text); }
-.pag-info { font-size: 11px; color: var(--faint); font-family: 'DM Mono', monospace; }
+.pag-info { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
 
 /* ══════════════════════════════════════════════════════════
    FILTROS
@@ -540,14 +540,14 @@ tbody td { padding: 11px 16px; font-size: 13px; color: var(--text); }
 .filtro-sel {
   height: 32px; padding: 0 10px;
   background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
-  font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--muted);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text);
   outline: none; cursor: pointer;
 }
 .filtro-sel:focus { border-color: var(--bh); }
 .filtro-inp {
   height: 32px; padding: 0 10px;
   background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
-  font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text);
   outline: none;
 }
 .filtro-inp:focus { border-color: var(--bh); }
@@ -588,7 +588,7 @@ tbody td { padding: 11px 16px; font-size: 13px; color: var(--text); }
   padding: 20px;
   margin-bottom: 12px;
 }
-.ex-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--faint); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+.ex-label { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px; }
 .ex-textarea {
   width: 100%; min-height: 80px;
   background: var(--bg3); border: 1px solid var(--border);
