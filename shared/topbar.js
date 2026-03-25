@@ -26,7 +26,7 @@
   border-bottom: 1px solid var(--border, rgba(255,255,255,0.10));
   display: flex;
   align-items: center;
-  padding: 0 28px;
+  padding: 0 28px
   gap: 20px;
   position: sticky;
   top: 0;
@@ -112,7 +112,7 @@
   color: var(--accent, #c9a96e);
   white-space: nowrap;
 }
-.cpcv-tb-cred-btn {
+.cpcv-tb-cred-btn {if (btn) btn.style.display = 'inline-block';
   display: none;
   height: 22px;
   padding: 0 10px;
@@ -231,7 +231,7 @@
           : creditos > 100
             ? 'var(--accent, #c9a96e)'
             : '#e05c5c';
-        if (btn) btn.style.display = creditos < 100 ? 'block' : 'none';
+        if (btn) btn.style.display = 'inline-block';
       }
     },
 
