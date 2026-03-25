@@ -267,8 +267,17 @@
       var emailEl = document.getElementById('cpcv-modal-email');
       if (!modal) return;
       if (link) link.href = 'https://checkout.salespark.io/I41MN6J193U/?offer=' + offer;
-      if (pacoteEl) pacoteEl.innerHTML = pacote;
-      if (emailEl) emailEl.textContent = CPCVTopbar._email || '—';
+      // Mostrar pacote + créditos após compra
+      var creditosPacote = parseInt(pacote.replace(/[^0-9]/g, '')) || 0;
+      var creditosActuais = CPCVTopbar._creditos || 0;
+      var creditosDepois = creditosActuais + creditosPacote;
+      if (pacoteEl) pacoteEl.innerHTML = pacote
+        + (creditosPacote > 0 && CPCVTopbar._creditos !== null
+          ? ' &nbsp;&middot;&nbsp; <span style="color:var(--ok,#4a9e6b)">Cr&eacute;ditos ap&oacute;s a compra: ' + creditosDepois.toLocaleString('pt-PT') + '</span>'
+          : '');
+      // Email do utilizador
+      var email = CPCVTopbar._email || window._cpvcUserEmail || '—';
+      if (emailEl) emailEl.textContent = email;
       modal.classList.add('open');
     },
 
@@ -313,11 +322,13 @@
       if (!wrap || !val) return;
       wrap.style.display = 'flex';
       if (acessoIlimitado) {
+        CPCVTopbar._creditos = null;
         val.textContent = 'Ilimitado';
         val.style.color = 'var(--ok, #4a9e6b)';
         if (btn) btn.style.display = 'none';
       } else {
         const c = creditos || 0;
+        CPCVTopbar._creditos = c;
         val.textContent = c.toLocaleString('pt-PT') + ' cr.';
         val.style.color = c > 500
           ? 'var(--ok, #4a9e6b)'
@@ -352,6 +363,7 @@
 
     setEmail: function(email) {
       CPCVTopbar._email = email;
+      window._cpvcUserEmail = email;
     }
   };
 
