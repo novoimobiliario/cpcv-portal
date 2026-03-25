@@ -183,28 +183,100 @@
 
   // ── API PÚBLICA ───────────────────────────────────────────────────────────
   window.CPCVTopbar = {
+    _email: null,
+
     _onComprar: function() {
-      var p = document.getElementById('cpcv-painel-comprar');
-      if (p) { p.style.display = p.style.display === 'none' ? 'flex' : 'none'; return; }
-      var el = document.createElement('div');
-      el.id = 'cpcv-painel-comprar';
-      el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;width:100%;background:var(--bg2,#141413);border-top:1px solid rgba(255,255,255,0.10);padding:20px 28px 28px;z-index:99999;font-family:\'DM Sans\',sans-serif;box-sizing:border-box';
-      el.innerHTML = '<style>@keyframes cpcvUp{from{transform:translateY(100%)}to{transform:translateY(0)}}#cpcv-painel-comprar{animation:cpcvUp .2s ease}</style>'
+      if (!document.getElementById('cpcv-painel-creditos')) CPCVTopbar._injectPainel();
+      var p = document.getElementById('cpcv-painel-creditos');
+      if (p) p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    },
+
+    _injectPainel: function() {
+      var s = document.createElement('style');
+      s.textContent = '#cpcv-painel-creditos{background:var(--bg2,#141413);border-bottom:1px solid var(--border,rgba(255,255,255,.1));padding:16px 28px;}'
+        + '#cpcv-modal-checkout{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;}'
+        + '#cpcv-modal-checkout.open{display:flex;}'
+        + '.cpcv-modal-box{background:var(--bg2,#141413);border:1px solid var(--border,rgba(255,255,255,.1));border-radius:16px;padding:28px;max-width:460px;width:100%;font-family:\'DM Sans\',sans-serif;}'
+        + '.cpcv-pacote{flex:1;min-width:110px;background:var(--bg,#0c0c0b);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:12px;text-align:center;display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:border-color .12s;}'
+        + '.cpcv-pacote:hover{border-color:rgba(201,169,110,.4);}'
+        + '.cpcv-pacote.popular{border-color:rgba(201,169,110,.4);position:relative;}'
+        + '.cpcv-pacote-cr{font-family:\'DM Mono\',monospace;font-size:14px;font-weight:500;color:var(--accent,#c9a96e);}'
+        + '.cpcv-pacote-preco{font-size:12px;color:var(--text-muted,#8a8880);}'
+        + '.cpcv-pacote-btn{margin-top:4px;background:var(--accent,#c9a96e);color:#0c0c0b;font-size:11px;font-weight:500;padding:5px 10px;border-radius:5px;}'
+        + '.cpcv-popular-badge{position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--accent,#c9a96e);color:#0c0c0b;font-size:8px;font-weight:700;padding:2px 8px;border-radius:3px;white-space:nowrap;letter-spacing:.04em;}';
+      document.head.appendChild(s);
+
+      var pacotes = [
+        {offer:'mn6j3971',cr:'100 cr.',preco:'8€'},
+        {offer:'mn6j4jwg',cr:'300 cr.',preco:'13€'},
+        {offer:'mn6j4u4l',cr:'500 cr.',preco:'20€'},
+        {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34€',popular:true},
+      ];
+      var cards = pacotes.map(function(p) {
+        return '<div class="cpcv-pacote' + (p.popular?' popular':'') + '" onclick="CPCVTopbar._abrirModal(\'' + p.offer + '\',\'' + p.cr + ' &mdash; ' + p.preco + '\')">'
+          + (p.popular ? '<div class="cpcv-popular-badge">POPULAR</div>' : '')
+          + '<div class="cpcv-pacote-cr">' + p.cr + '</div>'
+          + '<div class="cpcv-pacote-preco">' + p.preco + '</div>'
+          + '<div class="cpcv-pacote-btn">Comprar</div>'
+          + '</div>';
+      }).join('');
+
+      var painel = document.createElement('div');
+      painel.id = 'cpcv-painel-creditos';
+      painel.style.display = 'none';
+      painel.innerHTML = '<div style="max-width:860px;margin:0 auto">'
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
-        + '<div style="font-size:15px;font-weight:500;color:var(--text,#f0ede8)">Comprar creditos IA</div>'
-        + '<button onclick="document.getElementById(\'cpcv-painel-comprar\').style.display=\'none\'" style="background:none;border:none;color:var(--text-muted,#a8a5a0);cursor:pointer;font-size:20px;padding:0;line-height:1">&times;</button>'
+        + '<span style="font-size:13px;font-weight:500;color:var(--text,#f0ede8)">Comprar cr&eacute;ditos IA</span>'
+        + '<button onclick="document.getElementById(\'cpcv-painel-creditos\').style.display=\'none\'" style="background:none;border:none;color:var(--text-faint,#4a4845);cursor:pointer;font-size:18px;padding:0;line-height:1">&times;</button>'
         + '</div>'
-        + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">'
-        + [['100 cr.','5€'],['500 cr.','20€'],['1000 cr.','35€'],['2000 cr.','75€'],['3000 cr.','100€']].map(function(p){
-            return '<div style="flex:1;min-width:100px;background:var(--bg,#0c0c0b);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color .12s;text-align:center"'
-              + ' onmouseover="this.style.borderColor=\'rgba(201,169,110,0.4)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,0.07)\'">'
-              + '<div style="font-family:\'DM Mono\',monospace;font-size:14px;font-weight:500;color:var(--accent,#c9a96e)">' + p[0] + '</div>'
-              + '<div style="font-size:12px;color:var(--text-muted,#a8a5a0);margin-top:4px">' + p[1] + '</div>'
-              + '</div>';
-          }).join('')
+        + '<div style="display:flex;gap:10px;flex-wrap:wrap">' + cards + '</div>'
+        + '</div>';
+
+      var modal = document.createElement('div');
+      modal.id = 'cpcv-modal-checkout';
+      modal.innerHTML = '<div class="cpcv-modal-box">'
+        + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">'
+        + '<div><div style="font-size:15px;font-weight:500;color:var(--text,#f0ede8);margin-bottom:4px">Continuar para pagamento</div>'
+        + '<div style="font-size:12px;color:var(--text-muted,#8a8880)" id="cpcv-modal-pacote"></div></div>'
+        + '<button onclick="CPCVTopbar._fecharModal()" style="background:none;border:none;color:var(--text-faint,#4a4845);cursor:pointer;font-size:20px;padding:0;line-height:1;margin-left:16px">&times;</button>'
         + '</div>'
-        + '<div style="font-size:12px;color:var(--text-faint,#4a4845)">Para comprar envia email para <a href="mailto:academia@novoimobiliario.com" style="color:var(--accent,#c9a96e)">academia@novoimobiliario.com</a> com o pacote pretendido. Recebes as instrucoes de pagamento e os creditos sao atribuidos apos confirmacao.</div>';
-      document.body.appendChild(el);
+        + '<div style="background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.25);border-radius:10px;padding:14px 16px;margin-bottom:20px">'
+        + '<div style="display:flex;gap:10px;align-items:flex-start">'
+        + '<div style="font-size:16px;flex-shrink:0">&#9888;&#65039;</div>'
+        + '<div><div style="font-size:12px;font-weight:600;color:var(--accent,#c9a96e);letter-spacing:.02em;margin-bottom:6px;text-transform:uppercase">Aten&ccedil;&atilde;o &mdash; l&ecirc; antes de continuar</div>'
+        + '<div style="font-size:13px;color:var(--text,#f0ede8);line-height:1.6">Vais ser reencaminhado para o nosso parceiro de pagamentos. Para que os cr&eacute;ditos sejam atribu&iacute;dos automaticamente &agrave; tua conta, <strong>tens de utilizar exactamente este email no checkout:</strong></div>'
+        + '<div style="margin-top:10px;background:var(--bg,#0c0c0b);border:1px solid var(--border,rgba(255,255,255,.1));border-radius:6px;padding:8px 12px;font-family:\'DM Mono\',monospace;font-size:13px;color:var(--accent,#c9a96e);text-align:center" id="cpcv-modal-email">&mdash;</div>'
+        + '<div style="margin-top:8px;font-size:12px;color:var(--text-muted,#8a8880);line-height:1.5">Se utilizares um email diferente, os cr&eacute;ditos n&atilde;o ser&atilde;o atribu&iacute;dos automaticamente e ter&aacute;s de contactar o suporte.</div>'
+        + '</div></div></div>'
+        + '<div style="display:flex;gap:10px">'
+        + '<a id="cpcv-modal-link" href="#" target="_blank" onclick="CPCVTopbar._fecharModal()" style="flex:1;height:44px;background:var(--accent,#c9a96e);color:#0c0c0b;border:none;border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center">Continuar para o pagamento &rarr;</a>'
+        + '<button onclick="CPCVTopbar._fecharModal()" style="height:44px;padding:0 20px;background:none;border:1px solid var(--border,rgba(255,255,255,.1));border-radius:8px;color:var(--text-muted,#8a8880);font-family:\'DM Sans\',sans-serif;font-size:14px;cursor:pointer">Cancelar</button>'
+        + '</div></div>';
+      modal.addEventListener('click', function(e) { if (e.target === modal) CPCVTopbar._fecharModal(); });
+
+      var topbar = document.getElementById('cpcv-topbar');
+      if (topbar && topbar.parentNode) topbar.parentNode.insertBefore(painel, topbar.nextSibling);
+      else document.body.appendChild(painel);
+      document.body.appendChild(modal);
+    },
+
+    _abrirModal: function(offer, pacote) {
+      var modal = document.getElementById('cpcv-modal-checkout');
+      var link = document.getElementById('cpcv-modal-link');
+      var pacoteEl = document.getElementById('cpcv-modal-pacote');
+      var emailEl = document.getElementById('cpcv-modal-email');
+      if (!modal) return;
+      if (link) link.href = 'https://checkout.salespark.io/I41MN6J193U/?offer=' + offer;
+      if (pacoteEl) pacoteEl.innerHTML = pacote;
+      if (emailEl) emailEl.textContent = CPCVTopbar._email || '—';
+      modal.classList.add('open');
+    },
+
+    _fecharModal: function() {
+      var modal = document.getElementById('cpcv-modal-checkout');
+      if (modal) modal.classList.remove('open');
+      var painel = document.getElementById('cpcv-painel-creditos');
+      if (painel) painel.style.display = 'none';
     },
 
     _onAvatar: function() {
@@ -276,6 +348,10 @@
     setAvatar: function(nome) {
       const el = document.getElementById('cpcv-tb-avatar');
       if (el && nome) el.textContent = nome.split(' ').map(p => p[0]).join('').substring(0,2).toUpperCase();
+    },
+
+    setEmail: function(email) {
+      CPCVTopbar._email = email;
     }
   };
 
