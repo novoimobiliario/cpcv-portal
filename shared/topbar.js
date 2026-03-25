@@ -245,7 +245,10 @@
         + '<div style="font-size:16px;flex-shrink:0">&#9888;&#65039;</div>'
         + '<div><div style="font-size:12px;font-weight:600;color:var(--accent,#c9a96e);letter-spacing:.02em;margin-bottom:6px;text-transform:uppercase">Aten&ccedil;&atilde;o &mdash; l&ecirc; antes de continuar</div>'
         + '<div style="font-size:13px;color:var(--text,#f0ede8);line-height:1.6">Vais ser reencaminhado para o nosso parceiro de pagamentos. Para que os cr&eacute;ditos sejam atribu&iacute;dos automaticamente &agrave; tua conta, <strong>tens de utilizar exactamente este email no checkout:</strong></div>'
-        + '<div style="margin-top:10px;background:var(--bg,#0c0c0b);border:1px solid var(--border,rgba(255,255,255,.1));border-radius:6px;padding:8px 12px;font-family:\'DM Mono\',monospace;font-size:13px;color:var(--accent,#c9a96e);text-align:center" id="cpcv-modal-email">&mdash;</div>'
+        + '<div style="margin-top:10px;display:flex;align-items:center;gap:8px">'
+        + '<div style="flex:1;background:var(--bg,#0c0c0b);border:1px solid var(--border,rgba(255,255,255,.1));border-radius:6px;padding:8px 12px;font-family:\'DM Mono\',monospace;font-size:13px;color:var(--accent,#c9a96e);text-align:center" id="cpcv-modal-email">&mdash;</div>'
+        + '<button onclick="var e=document.getElementById(\'cpcv-modal-email\');navigator.clipboard.writeText(e.textContent);this.textContent=\'✓\';setTimeout(()=>this.textContent=\'Copiar\',2000)" style="height:36px;padding:0 12px;background:var(--bg3,#1c1c1a);border:1px solid var(--border,rgba(255,255,255,.1));border-radius:6px;color:var(--text-muted,#8a8880);font-family:\'DM Sans\',sans-serif;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0">Copiar</button>'
+        + '</div>'
         + '<div style="margin-top:8px;font-size:12px;color:var(--text-muted,#8a8880);line-height:1.5">Se utilizares um email diferente, os cr&eacute;ditos n&atilde;o ser&atilde;o atribu&iacute;dos automaticamente e ter&aacute;s de contactar o suporte.</div>'
         + '</div></div></div>'
         + '<div style="display:flex;gap:10px">'
@@ -267,8 +270,9 @@
       var emailEl = document.getElementById('cpcv-modal-email');
       if (!modal) return;
       if (link) link.href = 'https://checkout.salespark.io/I41MN6J193U/?offer=' + offer;
-      // Mostrar pacote + créditos após compra
-      var creditosPacote = parseInt(pacote.replace(/[^0-9]/g, '')) || 0;
+      // Extrair créditos do pacote (ex: "300 cr. — 13€" → 300)
+      var match = pacote.match(/^(\d+)/);
+      var creditosPacote = match ? parseInt(match[1]) : 0;
       var creditosActuais = CPCVTopbar._creditos || 0;
       var creditosDepois = creditosActuais + creditosPacote;
       if (pacoteEl) pacoteEl.innerHTML = pacote
