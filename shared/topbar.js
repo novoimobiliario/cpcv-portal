@@ -1,7 +1,7 @@
 /**
  * topbar.js — Topbar partilhada · Ecossistema CPCV
  * Repositório: github.com/novoimobiliario/cpcv-portal
- * Versão: 1.0 · Março 2026
+ * Versão: 1.1 · Março 2026
  *
  * Uso num exercício autónomo:
  *   <div id="topbar-root"></div>
@@ -26,7 +26,7 @@
   border-bottom: 1px solid var(--border, rgba(255,255,255,0.10));
   display: flex;
   align-items: center;
-  padding: 0 28px
+  padding: 0 28px;
   gap: 20px;
   position: sticky;
   top: 0;
@@ -112,8 +112,7 @@
   color: var(--accent, #c9a96e);
   white-space: nowrap;
 }
-.cpcv-tb-cred-btn {if (btn) btn.style.display = 'inline-block';
-  display: none;
+.cpcv-tb-cred-btn {
   height: 22px;
   padding: 0 10px;
   background: var(--accent, #c9a96e);
@@ -164,7 +163,7 @@
     <span class="cpcv-tb-logo-name">Ecossistema <span>CPCV</span></span>
   </div>
   <nav class="cpcv-tb-nav">
-    <button class="cpcv-tb-btn" onclick="history.back()">← Módulos</button>
+    <button class="cpcv-tb-btn" onclick="history.back()">Modulos</button>
     ${opts.modulo ? `<button class="cpcv-tb-btn active">${opts.modulo}</button>` : ''}
   </nav>
   <div class="cpcv-tb-cred" id="cpcv-tb-cred" style="display:none">
@@ -173,7 +172,7 @@
     <span class="cpcv-tb-cred-val" id="cpcv-tb-cred-val">—</span>
     <button class="cpcv-tb-cred-btn" id="cpcv-tb-cred-btn" onclick="CPCVTopbar._onComprar()">Comprar</button>
   </div>
-  <div class="cpcv-tb-avatar" id="cpcv-tb-avatar" onclick="CPCVTopbar._onAvatar()" title="Área de utilizador" style="cursor:pointer">??</div>
+  <div class="cpcv-tb-avatar" id="cpcv-tb-avatar" onclick="CPCVTopbar._onAvatar()" title="Area de utilizador" style="cursor:pointer">??</div>
   <button class="cpcv-tb-back" onclick="history.back()" title="Voltar ao portal">
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
       <path d="M10 14H13a1 1 0 001-1V3a1 1 0 00-1-1h-3M6 11l-3-3 3-3M3 8h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -184,10 +183,11 @@
 
   // ── API PÚBLICA ───────────────────────────────────────────────────────────
   window.CPCVTopbar = {
-    _onComprar: function() {},
+    _onComprar: function() {
+      window.location.href = 'https://cpcv.pt/portal.html#creditos';
+    },
 
     _onAvatar: function() {
-      // Voltar ao portal na secção perfil — pode ser sobreposto via opts.onAvatar
       window.location.href = 'https://cpcv.pt/portal.html#perfil';
     },
 
@@ -208,12 +208,12 @@
       wrapper.innerHTML = buildHTML(opts);
       root.parentNode.insertBefore(wrapper.firstElementChild, root.nextSibling);
 
-      // Callback comprar
+      // Callbacks opcionais
       if (opts.onComprar) this._onComprar = opts.onComprar;
       if (opts.onAvatar) this._onAvatar = opts.onAvatar;
     },
 
-    // Actualizar créditos na topbar
+    // Actualizar créditos na topbar — botão Comprar sempre visível
     setCreditos: function(creditos, acessoIlimitado) {
       const wrap = document.getElementById('cpcv-tb-cred');
       const val  = document.getElementById('cpcv-tb-cred-val');
@@ -225,10 +225,11 @@
         val.style.color = 'var(--ok, #4a9e6b)';
         if (btn) btn.style.display = 'none';
       } else {
-        val.textContent = creditos.toLocaleString('pt-PT') + ' cr.';
-        val.style.color = creditos > 500
+        const c = creditos || 0;
+        val.textContent = c.toLocaleString('pt-PT') + ' cr.';
+        val.style.color = c > 500
           ? 'var(--ok, #4a9e6b)'
-          : creditos > 100
+          : c > 100
             ? 'var(--accent, #c9a96e)'
             : '#e05c5c';
         if (btn) btn.style.display = 'inline-block';
@@ -240,7 +241,7 @@
       const el = document.getElementById('cpcv-tb-cred-preview');
       if (!el) return;
       const val = parseInt(estimativa);
-      if (isNaN(val) || val <= 0) return; // nunca mostrar valores inválidos
+      if (isNaN(val) || val <= 0) return;
       el.textContent = '~' + val.toLocaleString('pt-PT') + ' cr.';
       el.style.display = 'inline';
     },
