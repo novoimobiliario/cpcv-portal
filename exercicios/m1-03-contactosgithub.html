@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pontos de Contacto Mágicos · CPCV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/gh/novoimobiliario/cpcv-portal@main/shared/topbar.js"></script>
+<style>
+:root {
+  --bg:#0c0c0b; --bg2:#141413; --bg3:#1c1c1a;
+  --border:rgba(255,255,255,0.07); --border-hover:rgba(255,255,255,0.14);
+  --text:#f0ede8; --text-muted:#8a8880; --text-faint:#4a4845;
+  --accent:#c9a96e; --accent-dim:rgba(201,169,110,0.12); --accent-dim2:rgba(201,169,110,0.06);
+  --success:#4a9e6b; --danger:#e06060;
+  --radius:10px; --radius-lg:16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;}
+
+/* ══ EXERCÍCIO ══ */
+#view-ex{flex:1;display:none;flex-direction:column;}
+#view-ex.active{display:flex;}
+.ex-content{max-width:860px;margin:0 auto;padding:36px 28px 80px;width:100%;}
+.breadcrumb{display:flex;align-items:center;gap:8px;margin-bottom:32px;font-size:12px;}
+.breadcrumb-back{color:var(--accent);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;font-size:12px;display:flex;align-items:center;gap:4px;padding:0;opacity:.8;transition:opacity .12s;}
+.breadcrumb-back:hover{opacity:1;}
+.breadcrumb-sep,.breadcrumb-current{color:var(--text-faint);}
+.module-badge{display:inline-flex;font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:.08em;margin-bottom:10px;text-transform:uppercase;}
+
+/* ══ TABS ══ */
+.pc-tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:28px;}
+.pc-tab-btn{height:46px;background:var(--bg2);border:none;font-family:'DM Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint);cursor:pointer;transition:all .2s;border-right:1px solid var(--border);}
+.pc-tab-btn:last-child{border-right:none;}
+.pc-tab-btn:hover:not(.active){color:var(--text-muted);background:var(--bg3);}
+.pc-tab-btn.active{color:#0c0c0b;font-weight:700;}
+#tab-plano.active{background:var(--success);}
+#tab-magico.active{background:var(--accent);}
+#tab-clientes.active{background:var(--text);}
+.pc-panel{display:none;}
+.pc-panel.active{display:block;}
+
+/* ══ SECÇÃO ══ */
+.pc-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px;overflow:hidden;}
+.pc-section-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg3);}
+.pc-section-title{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em;}
+.pc-section-body{padding:16px;}
+
+/* ══ FORMULÁRIO ══ */
+.pc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.pc-grid.col3{grid-template-columns:1fr 1fr 1fr;}
+.pc-field{display:flex;flex-direction:column;gap:6px;}
+.pc-field.full{grid-column:1/-1;}
+.pc-field label{font-size:10px;font-weight:500;color:var(--text-faint);letter-spacing:.08em;text-transform:uppercase;font-family:'DM Mono',monospace;}
+.pc-field input,.pc-field select,.pc-field textarea{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:0 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .15s;}
+.pc-field input{height:40px;}
+.pc-field select{height:40px;appearance:none;cursor:pointer;}
+.pc-field textarea{padding:10px 12px;resize:vertical;min-height:72px;line-height:1.6;}
+.pc-field input::placeholder,.pc-field textarea::placeholder{color:var(--text-faint);}
+.pc-field input:focus,.pc-field select:focus,.pc-field textarea:focus{border-color:var(--border-hover);}
+.pc-field select.empty{color:var(--text-faint);}
+.tel-row{display:flex;gap:8px;}
+.tel-row select{width:90px;flex-shrink:0;}
+.tel-row input{flex:1;}
+
+/* ══ STRIP DE DIAS ══ */
+.pc-strip{display:flex;align-items:center;gap:16px;padding:14px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px;}
+.strip-num{font-family:'Instrument Serif',serif;font-size:28px;font-weight:400;color:var(--text);}
+.strip-info{display:flex;flex-direction:column;}
+.strip-label{font-size:10px;color:var(--text-faint);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.06em;}
+.strip-bar-wrap{flex:1;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.strip-bar-fill{height:100%;background:var(--success);border-radius:2px;transition:width .5s;}
+.strip-pct{font-size:11px;color:var(--text-faint);font-family:'DM Mono',monospace;}
+
+/* ══ TIMELINE DE CONTACTOS ══ */
+.pc-momento{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:6px;}
+.pc-momento.agora{border-color:var(--success);border-width:1.5px;}
+.pc-momento.passou{opacity:.5;}
+.pc-mhead{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;transition:background .1s;}
+.pc-mhead:hover{background:var(--bg3);}
+.pc-mdia{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-faint);min-width:44px;flex-shrink:0;}
+.pc-mnom{font-size:13px;font-weight:500;color:var(--text);flex:1;}
+.pc-mcanal{font-size:11px;color:var(--text-faint);}
+.pc-mchev{font-size:9px;color:var(--text-faint);transition:transform .2s;flex-shrink:0;}
+.pc-momento.open .pc-mchev{transform:rotate(180deg);}
+.pc-mbody{display:none;padding:0 16px 16px;border-top:1px solid var(--border);}
+.pc-momento.open .pc-mbody{display:block;}
+.pc-msg-label{font-size:10px;font-weight:500;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;font-family:'DM Mono',monospace;}
+.pc-msg-edit{width:100%;font-size:13px;color:var(--text);background:var(--bg3);border:none;border-left:2px solid var(--success);padding:10px 14px;border-radius:0 8px 8px 0;line-height:1.7;font-family:'DM Sans',sans-serif;resize:vertical;min-height:60px;outline:none;}
+.pc-msg-edit:focus{background:var(--bg);}
+.pc-msg-edit.ia{border-left-color:var(--accent);}
+.pc-acoes{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.pc-btn{padding:5px 14px;border-radius:20px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:all .15s;border:1px solid var(--border);background:none;color:var(--text-muted);}
+.pc-btn:hover{border-color:var(--border-hover);color:var(--text);}
+.pc-btn-wa{border-color:rgba(37,211,102,.3);color:#4a9e6b;}
+.pc-btn-wa:hover{background:rgba(37,211,102,.08);}
+.pc-btn-mail{border-color:rgba(74,144,217,.3);color:#4a90d9;}
+.pc-btn-mail:hover{background:rgba(74,144,217,.08);}
+.pc-btn-tel{border-color:var(--border);color:var(--text-muted);}
+.pc-aviso{font-size:12px;color:var(--danger);background:rgba(224,96,96,.08);padding:8px 12px;border-radius:6px;margin-top:10px;line-height:1.5;}
+
+/* ══ GRUPOS SECÇÃO ══ */
+.pc-sec-label{font-size:10px;font-weight:500;color:var(--text-faint);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:8px;}
+.pc-badge-ok{display:inline-flex;padding:1px 8px;border-radius:20px;background:rgba(74,158,107,.12);color:var(--success);font-size:10px;}
+.pc-badge-pass{background:rgba(224,96,96,.12);color:var(--danger);}
+
+/* ══ IA TRIGGER ══ */
+.ia-trigger{display:flex;flex-direction:column;align-items:center;gap:14px;padding:2.5rem 1.5rem;border:1px dashed var(--border-hover);border-radius:var(--radius-lg);text-align:center;background:var(--bg2);margin-bottom:16px;}
+.ia-trigger p{font-size:13px;color:var(--text-muted);line-height:1.7;max-width:380px;}
+.btn-gerar-ia{padding:11px 28px;border-radius:var(--radius);background:var(--accent);color:#0c0c0b;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;transition:opacity .15s;display:inline-flex;align-items:center;gap:8px;}
+.btn-gerar-ia:hover{opacity:.85;}
+.btn-gerar-ia:disabled{opacity:.35;cursor:not-allowed;}
+.ia-loading{display:flex;flex-direction:column;align-items:center;gap:12px;padding:2.5rem;text-align:center;background:var(--bg2);border-radius:var(--radius-lg);border:1px solid var(--border);margin-bottom:16px;}
+.ia-loading p{font-size:13px;color:var(--text-muted);}
+.dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin:0 2px;animation:bounce .9s infinite;}
+.dots span:nth-child(2){animation-delay:.15s;}
+.dots span:nth-child(3){animation-delay:.3s;}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+/* ══ TABELA CLIENTES ══ */
+.pc-clientes-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.pc-clientes-table{width:100%;border-collapse:collapse;}
+.pc-clientes-table th{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.08em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);font-weight:500;}
+.pc-clientes-table td{padding:10px 12px;font-size:12px;color:var(--text-muted);border-bottom:1px solid var(--border);}
+.pc-clientes-table tr:hover td{background:var(--bg3);color:var(--text);}
+.pc-clientes-table tr:last-child td{border-bottom:none;}
+.btn-carregar{height:28px;padding:0 12px;background:none;border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--accent);cursor:pointer;font-family:'DM Mono',monospace;transition:all .12s;}
+.btn-carregar:hover{border-color:var(--accent);background:var(--accent-dim);}
+.btn-apagar-c{height:24px;width:24px;border-radius:5px;background:none;border:1px solid var(--border);color:var(--text-faint);cursor:pointer;font-size:11px;transition:all .12s;}
+.btn-apagar-c:hover{border-color:rgba(224,96,96,.4);color:var(--danger);}
+.pc-empty{padding:32px;text-align:center;font-size:13px;color:var(--text-faint);}
+
+/* ══ EXPORT BAR ══ */
+.pc-export-bar{margin-top:16px;padding:16px 18px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.pc-export-info{font-size:12px;color:var(--text-faint);line-height:1.6;}
+.btn-ics{padding:9px 20px;border-radius:var(--radius);background:var(--bg3);color:var(--text-muted);font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;border:1px solid var(--border);cursor:pointer;transition:all .15s;}
+.btn-ics:hover{border-color:var(--border-hover);color:var(--text);}
+.btn-ics:disabled{opacity:.35;cursor:not-allowed;}
+
+/* ══ FOOTER ══ */
+.debug-footer{padding:10px 28px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0;background:var(--bg2);}
+.df-left,.df-right{display:flex;align-items:center;gap:6px;}
+.df-tag{font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:4px;background:var(--accent-dim);color:var(--accent);letter-spacing:.04em;border:1px solid rgba(201,169,110,0.2);}
+.df-item{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-faint);}
+.df-sep{color:var(--border-hover);font-size:9px;}
+.df-user{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-muted);background:var(--bg3);border:1px solid var(--border);padding:2px 8px;border-radius:4px;}
+.df-role{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-faint);padding:2px 6px;border-radius:4px;border:1px solid var(--border);}
+
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fi .3s ease;}
+@media(max-width:640px){
+  .topbar{padding:0 16px;}
+  .ex-content{padding:24px 16px 60px;}
+  .pc-grid{grid-template-columns:1fr;}
+  .pc-grid.col3{grid-template-columns:1fr 1fr;}
+  .debug-footer{padding:10px 16px;}
+}
+</style>
+</head>
+<body>
+<div id="topbar-root"></div>
+
+<!-- EXERCÍCIO -->
+<div id="view-ex">
+  <div class="ex-content fade-in">
+
+    <div class="breadcrumb">
+      <button class="breadcrumb-back" onclick="window.location.href='portal.html'">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M10 13L5 8L10 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Módulo 01
+      </button>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current">Pontos de Contacto Mágicos</span>
+    </div>
+
+    <div style="margin-bottom:24px">
+      <div class="module-badge">Módulo 01 · Exercício</div>
+      <h2 style="font-family:'Instrument Serif',serif;font-size:26px;font-weight:400;letter-spacing:-0.02em;color:var(--text);line-height:1.2">Pontos de Contacto Mágicos</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.7">Constrói um plano de acompanhamento pós-escritura personalizado para cada cliente. A IA adapta o plano ao perfil, imóvel e contexto — e incorpora o teu estilo de comunicação.</p>
+    </div>
+
+      <!-- DADOS DO CLIENTE -->
+      <div class="pc-section">
+        <div class="pc-section-header">
+          <span class="pc-section-title">Dados do cliente</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button id="btn-guardar-cliente" onclick="guardarCliente()" style="height:28px;padding:0 14px;background:none;border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text-muted);cursor:pointer;font-family:'DM Mono',monospace;transition:all .12s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">Guardar cliente</button>
+            <button onclick="limparFormulario()" style="height:28px;padding:0 14px;background:none;border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text-faint);cursor:pointer;font-family:'DM Mono',monospace;transition:all .12s" onmouseover="this.style.borderColor='var(--border-hover)';this.style.color='var(--text-muted)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-faint)'">Novo</button>
+          </div>
+        </div>
+        <div class="pc-section-body">
+          <input type="hidden" id="cliente-id">
+
+          <!-- L1: nomes + data + cidade -->
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+            <div class="pc-field">
+              <label>Nome do cliente</label>
+              <input type="text" id="c-nome" placeholder="ex: Família Costa" oninput="onFormChange()">
+            </div>
+            <div class="pc-field">
+              <label>2.º titular <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-faint);font-size:10px">(opcional)</span></label>
+              <input type="text" id="c-nome2" placeholder="Nome" oninput="onFormChange()">
+            </div>
+            <div class="pc-field">
+              <label>Data da escritura</label>
+              <input type="date" id="c-data" onchange="onFormChange()">
+            </div>
+            <div class="pc-field">
+              <label>Cidade</label>
+              <input type="text" id="c-cidade" placeholder="Lisboa, Porto…" oninput="onFormChange()">
+            </div>
+          </div>
+
+          <!-- L2: contacto + imóvel -->
+          <div style="display:grid;grid-template-columns:1.4fr 1.4fr 1fr 0.6fr;gap:10px;margin-bottom:10px">
+            <div class="pc-field">
+              <label>Telemóvel</label>
+              <div class="tel-row">
+                <select id="c-ind">
+                  <option value="+351">PT +351</option>
+                  <option value="+55">BR +55</option>
+                  <option value="+244">AO +244</option>
+                  <option value="+258">MZ +258</option>
+                  <option value="+34">ES +34</option>
+                  <option value="+44">UK +44</option>
+                </select>
+                <input type="tel" id="c-tel" placeholder="912 345 678" oninput="onFormChange()">
+              </div>
+            </div>
+            <div class="pc-field">
+              <label>Email</label>
+              <input type="email" id="c-email" placeholder="cliente@email.com" oninput="onFormChange()">
+            </div>
+            <div class="pc-field">
+              <label>Tipo de imóvel</label>
+              <select id="c-tipo-imovel" class="empty" onchange="this.classList.toggle('empty',!this.value);onFormChange()">
+                <option value="">— Tipo —</option>
+                <option>Apartamento</option>
+                <option>Moradia</option>
+                <option>Investimento</option>
+                <option>Terreno</option>
+                <option>Escritório</option>
+                <option>Loja</option>
+              </select>
+            </div>
+            <div class="pc-field">
+              <label>Tipologia</label>
+              <select id="c-tipologia" class="empty" onchange="this.classList.toggle('empty',!this.value);onFormChange()">
+                <option value="">—</option>
+                <option>T0</option><option>T1</option><option>T2</option>
+                <option>T3</option><option>T4</option><option>T4+</option>
+                <option>N/A</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- L3: nicho + subgrupo + subnicho -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+            <div class="pc-field">
+              <label>Nicho</label>
+              <select id="c-nicho" class="empty" onchange="updateSubgrupo();this.classList.toggle('empty',!this.value);onFormChange()">
+                <option value="">— Nicho —</option>
+                <option value="vendedores">Vendedores</option>
+                <option value="compradores">Compradores</option>
+                <option value="troca">Troca de Casa</option>
+                <option value="arrendamento">Arrendamento</option>
+                <option value="inativos">Proprietários Inativos</option>
+              </select>
+            </div>
+            <div class="pc-field">
+              <label>Subgrupo</label>
+              <select id="c-subgrupo" class="empty" onchange="updateSubnicho();this.classList.toggle('empty',!this.value);onFormChange()">
+                <option value="">— Selecciona o nicho —</option>
+              </select>
+            </div>
+            <div class="pc-field">
+              <label>Subnicho</label>
+              <select id="c-subnicho" class="empty" onchange="this.classList.toggle('empty',!this.value);onFormChange()">
+                <option value="">— Selecciona o subgrupo —</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- L4: contactos + aniversários -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+            <div class="pc-field">
+              <label>Contactos anteriores</label>
+              <select id="c-contactos-ant" class="empty" onchange="this.classList.toggle('empty',!this.value);onFormChange()">
+                <option value="">— Nenhum —</option>
+                <option value="poucos">1–3 contactos</option>
+                <option value="alguns">4–10 contactos</option>
+                <option value="muitos">Mais de 10</option>
+              </select>
+            </div>
+            <div class="pc-field">
+              <label>Período</label>
+              <select id="c-periodo" class="empty" onchange="this.classList.toggle('empty',!this.value);onFormChange()">
+                <option value="">— Período —</option>
+                <option value="semana">Última semana</option>
+                <option value="mes">Último mês</option>
+                <option value="varios">Vários meses</option>
+                <option value="ano">Mais de um ano</option>
+              </select>
+            </div>
+            <div class="pc-field">
+              <label>Aniversário cliente <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-faint);font-size:10px">(opc.)</span></label>
+              <input type="date" id="c-aniversario" onchange="onFormChange()">
+            </div>
+            <div class="pc-field">
+              <label>Aniv. 2.º titular <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-faint);font-size:10px">(opc.)</span></label>
+              <input type="date" id="c-aniversario2" onchange="onFormChange()">
+            </div>
+          </div>
+
+          <!-- L5: notas -->
+          <div class="pc-field" style="margin-bottom:4px">
+            <label>Notas e contexto pessoal</label>
+            <textarea id="c-notas" style="min-height:56px;height:56px" placeholder="ex: Têm um cão, mudaram do Porto, filhos pequenos, compra para investimento…" oninput="onFormChange()"></textarea>
+          </div>
+
+          <div id="msg-guardar" style="font-size:12px;min-height:16px;margin-top:6px"></div>
+        </div>
+      </div>
+
+
+
+    <!-- TABS -->
+    <div class="pc-tabs" style="grid-template-columns:1fr 1fr 1fr">
+      <button class="pc-tab-btn active" id="tab-plano" onclick="showTab('plano')">Plano Básico</button>
+      <button class="pc-tab-btn" id="tab-magico" onclick="showTab('magico')">Plano Mágico ✦</button>
+      <button class="pc-tab-btn" id="tab-clientes" onclick="showTab('clientes')">Clientes <span id="tab-clientes-count"></span></button>
+    </div>
+
+
+
+    <!-- ═══ TAB PLANO ═══ -->
+    <div id="panel-plano" class="pc-panel active">
+
+      <!-- STRIP -->
+      <div id="pc-strip" class="pc-strip" style="display:none">
+        <div>
+          <div class="strip-num" id="strip-num">0</div>
+          <div class="strip-label">dias após escritura</div>
+        </div>
+        <div class="strip-bar-wrap">
+          <div class="strip-bar-fill" id="strip-fill" style="width:0%"></div>
+        </div>
+        <div class="strip-pct" id="strip-pct">0%</div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;margin-left:8px">
+          <label style="font-size:9px;font-family:'DM Mono',monospace;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em">Ver a partir de</label>
+          <input type="date" id="data-inicio" style="height:28px;padding:0 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none" onchange="onFormChange()" title="Por defeito usa hoje. Altera para ver o plano a partir de outra data.">
+        </div>
+      </div>
+
+      <!-- PLANO ESTÁTICO -->
+      <div id="plano-estatico"></div>
+
+    </div><!-- /panel-plano -->
+
+    <!-- ═══ TAB MÁGICO ═══ -->
+    <div id="panel-magico" class="pc-panel">
+      <!-- PLANO IA -->
+      <div id="plano-ia"></div>
+    </div><!-- /panel-magico -->
+
+    <!-- ═══ TAB CLIENTES ═══ -->
+    <div id="panel-clientes" class="pc-panel">
+      <div class="pc-clientes-header">
+        <span style="font-size:13px;color:var(--text-muted)">Os teus clientes guardados. Carrega um para gerar novos pontos de contacto.</span>
+      </div>
+      <div id="clientes-lista"></div>
+    </div>
+
+  </div><!-- /ex-content -->
+</div><!-- /view-ex -->
+
+<!-- FOOTER -->
+<div class="debug-footer">
+  <div class="df-left">
+    <span class="df-tag">250325_v1</span>
+    <span class="df-sep">·</span>
+    <span class="df-item">2025-03-25</span>
+  </div>
+  <div class="df-right">
+    <span class="df-user" id="df-user">—</span>
+    <span class="df-role" id="df-role">—</span>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════
+const SB_URL = 'https://zsfgnzowdkwupsevsjbr.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzZmduem93ZGt3dXBzZXZzamJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMzcyMTIsImV4cCI6MjA4OTYxMzIxMn0.nQIQnwIdVZjoTPOVmDNIAbS7_jT5WxYs9DBGQWV2CEw';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+let currentUser = null;
+
+// ════════════════════════════════════════
+// INIT — topbar.js do GitHub
+// ════════════════════════════════════════
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'portal.html'; return; }
+  currentUser = session.user;
+
+  // Inicializar topbar com a API do GitHub
+  CPCVTopbar.init({ modulo: 'Pontos de Contacto Mágicos' });
+
+  // Carregar dados do mentorado
+  const { data: m } = await sb.from('mentorados')
+    .select('nome,role,creditos_ia,acesso_ia,telefone')
+    .eq('user_id', currentUser.id).maybeSingle();
+  if (m) {
+    CPCVTopbar.setAvatar(m.nome || currentUser.email);
+    CPCVTopbar.setCreditos(m.creditos_ia || 0, m.acesso_ia);
+    nomeConsultor = m.nome ? m.nome.split(' ')[0] : '';
+    telConsultor  = m.telefone || '';
+  }
+
+  // Buscar apresentação do consultor (para contexto da IA)
+  try {
+    const { data: apres } = await sb.from('respostas').select('resposta_json')
+      .eq('user_id', currentUser.id).eq('exercicio_id', APRES_ID).maybeSingle();
+    if (apres?.resposta_json) {
+      const r = apres.resposta_json;
+      const tmp = document.createElement('div');
+      tmp.innerHTML = r.texto_longo || r.texto_curto || '';
+      apresentacaoConsultor = (tmp.textContent || '').trim().substring(0, 800);
+      if (!nomeConsultor && r.nome) nomeConsultor = r.nome.split(' ')[0];
+    }
+  } catch(e) { console.warn('Apresentação não encontrada:', e.message); }
+
+  // Mostrar exercício e carregar dados
+  document.getElementById('view-ex').classList.add('active');
+  onFormChange();
+  await carregarListaClientes();
+})();
+
+const EX_ID = '00000000-0000-0000-0000-000000000005';
+const APRES_ID = '00000000-0000-0000-0000-000000000002';
+
+// ════════════════════════════════════════
+// ESTADO
+// ════════════════════════════════════════
+let nomeConsultor = '';
+let telConsultor = '';
+let apresentacaoConsultor = '';
+let iaPlano = null;
+let iaGerado = false;
+let openMomentos = {};
+
+// ════════════════════════════════════════
+// SUBNICHOS
+// ════════════════════════════════════════
+// Nichos e subnichos exactos do Canvas de Comunicação
+const CV_ICP = {
+  vendedores:   { label:'🏠 Vendedores', subs:{ residencial:['Residencial',['Primeiro vendedor','Vendedor de habitação própria','Vendedor de segunda habitação','Vendedor emigrante','Vendedor sénior / reformado','Vendedor por separação','Vendedor por dificuldade financeira']], heranca:['Herança e Família',['Herdeiro individual','Co-herdeiros (herança partilhada)','Imóvel devoluto herdado']], investimento_v:['Investimento',['Pequeno investidor (1-3 imóveis)','Investidor médio (carteira)','Grande investidor / fundo','Investidor estrangeiro']], comercial_v:['Comercial e Terrenos',['Vendedor de loja / espaço comercial','Vendedor de escritório','Vendedor de terreno urbano','Vendedor de terreno rústico','Vendedor de armazém']], promocao:['Promoção e Construção',['Promotor imobiliário','Construtor que vende directamente','Vendedor de imóvel em reabilitação']] }},
+  compradores:  { label:'🔑 Compradores', subs:{ primeira_compra:['Primeira Compra',['Jovem adulto solo','Casal jovem sem filhos','Casal jovem com filhos','Monoparental','Emigrante que regressa','Imigrante / expat']], compra_seguinte:['Compra Seguinte',['Comprador de upgrade','Comprador de downsize','Comprador de segunda habitação','Comprador por mudança de vida']], investimento_c:['Investimento',['Primeiro investidor','Pequeno investidor recorrente','Investidor em reabilitação (flipper)','Investidor em alojamento local','Investidor estrangeiro']], comercial_c:['Comercial e Terrenos',['Comprador para negócio próprio','Comprador de escritório','Comprador de terreno para construir','Comprador de terreno para promoção']], nichos_c:['Nichos Especiais',['Comprador de imóvel arrendado','Comprador em planta','Comprador para reabilitação própria','Comprador com permuta']] }},
+  troca:        { label:'🔄 Troca de Casa', subs:{ fase_vida:['Por Fase de Vida',['Casal que vai ter filhos','Família em crescimento','Ninho vazio','Sénior que simplifica','Recém-divorciado/separado','Casal que se junta']], motivacao:['Por Motivação Funcional',['Mudança de emprego','Teletrabalho permanente','Upgrade de qualidade','Downgrade estratégico','Problemas de vizinhança','Acessibilidade / saúde']], geografico:['Por Movimento Geográfico',['Cidade para periferia','Periferia para cidade','Litoral para interior','Interior para litoral','Portugal para estrangeiro','Estrangeiro para Portugal']], complexidade:['Por Complexidade',['Troca em cadeia','Crédito ponte','Permuta directa','Troca com construção']] }},
+  arrendamento: { label:'📋 Arrendamento', subs:{ senhorios:['Senhorios',['Senhorio de primeira vez','Senhorio com múltiplos imóveis','Senhorio emigrante','Senhorio que quer desocupar','Senhorio de alojamento local']], inquilinos:['Inquilinos',['Jovem a sair de casa','Estudante universitário','Família que arrenda por opção','Profissional deslocado','Estrangeiro / nómada digital']] }},
+  inativos:     { label:'💤 Proprietários Inativos', subs:{ sem_decisao:['Proprietários sem Decisão',['Imóvel devoluto sem decisão','Herança não resolvida','Proprietário emocional','Proprietário sem informação','Proprietário à espera do momento']] }}
+};
+
+function updateSubgrupo() {
+  const nicho = document.getElementById('c-nicho').value;
+  const selSub = document.getElementById('c-subgrupo');
+  const selNicho = document.getElementById('c-subnicho');
+  selSub.innerHTML = '<option value="">— Subgrupo —</option>';
+  selNicho.innerHTML = '<option value="">— Selecciona o subgrupo —</option>';
+  selSub.classList.add('empty'); selNicho.classList.add('empty');
+  if (nicho && CV_ICP[nicho]) {
+    Object.entries(CV_ICP[nicho].subs).forEach(([k, v]) => {
+      const o = document.createElement('option'); o.value = k; o.textContent = v[0]; selSub.appendChild(o);
+    });
+    selSub.classList.remove('empty');
+  }
+}
+
+function updateSubnicho() {
+  const nicho = document.getElementById('c-nicho').value;
+  const subgrupo = document.getElementById('c-subgrupo').value;
+  const sel = document.getElementById('c-subnicho');
+  sel.innerHTML = '<option value="">— Subnicho —</option>';
+  sel.classList.add('empty');
+  if (nicho && subgrupo && CV_ICP[nicho]?.subs[subgrupo]) {
+    CV_ICP[nicho].subs[subgrupo][1].forEach(s => {
+      const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o);
+    });
+    sel.classList.remove('empty');
+  }
+}
+
+// ════════════════════════════════════════
+// TIMELINE ESTÁTICA
+// ════════════════════════════════════════
+// Timeline base (12 momentos fixos)
+const TL_BASE = [
+  {dias:0,  titulo:'Boas-vindas',            canal:'WhatsApp', msg:'Boa mudança, {nome}! Este é um dia único — guardem este momento. Qualquer coisa, sabes onde estou. {consultor}'},
+  {dias:2,  titulo:'Dossiê digital',          canal:'Email',    msg:'Olá {nome}! Aqui está o dossiê completo com escritura, ficha técnica e documentos de garantia. Fica guardado para quando precisarem. {consultor}'},
+  {dias:7,  titulo:'Checklist de morada',     canal:'Email',    msg:'Olá {nome}! Aqui fica o checklist com os sítios onde actualizar a morada: CC, finanças, médico de família, escola. Vale a pena fazer tudo de uma vez. {consultor}'},
+  {dias:14, titulo:'Primeiros vizinhos',      canal:'WhatsApp', msg:'Já estão a sentir-se em casa, {nome}? Tenho uns favoritos do bairro — restaurante, café, padaria — que acho que vão gostar. {consultor}'},
+  {dias:30, titulo:'Check-in técnico',        canal:'WhatsApp', msg:'Já testaram tudo em casa, {nome}? Aquecimento, canalização, electricidade. Preciso de recomendar alguém de confiança para manutenção? {consultor}'},
+  {dias:45, titulo:'Pedido de testemunho',    canal:'WhatsApp', msg:'O mercado está muito dinâmico, {nome}. Se conhecerem alguém que gostasse de ter este tipo de acompanhamento, estou aqui. Obrigado pela confiança. {consultor}'},
+  {dias:60, titulo:'Alerta matrículas',       canal:'WhatsApp', msg:'Lembrete, {nome}: se mudaram de zona, as matrículas escolares têm prazo. Posso ajudar a perceber qual a escola da área. {consultor}'},
+  {dias:90, titulo:'Mimo especial',           canal:'Telefone', msg:'Tenho uma surpresa a caminho — um pequeno obrigado por terem confiado em mim nesta aventura. {consultor}'},
+  {dias:180,titulo:'Meio ano em casa',        canal:'WhatsApp', msg:'Meio ano já, {nome}! A casa ainda preenche o que esperavam? Adoro saber como está a correr. {consultor}'},
+  {dias:210,titulo:'Registo nas finanças',    canal:'Email',    msg:'Olá {nome}! Uma nota prática: já verificaram se o imóvel está correctamente registado nas finanças? Posso enviar o passo a passo pelo e-balcão. {consultor}'},
+  {dias:300,titulo:'Pré-aniversário',         canal:'WhatsApp', msg:'Quase um ano, {nome}. Nem parece. Obrigado por me terem deixado fazer parte desta história. {consultor}'},
+  {dias:365,titulo:'Aniversário da escritura',canal:'WhatsApp', msg:'Um ano na vossa casa! Que este seja apenas o primeiro de muitos. Obrigado pela confiança — foi um privilégio. {consultor}'},
+];
+
+// Datas festivas fixas (dia/mês)
+const DATAS_FESTIVAS = [
+  { dia:1,  mes:1,  titulo:'Feliz Ano Novo',       canal:'WhatsApp', msg:'Feliz Ano Novo, {nome}! Que {ano} traga saúde, alegria e muita vida boa na vossa casa. {consultor}' },
+  { dia:14, mes:2,  titulo:'Dia dos Namorados',    canal:'WhatsApp', msg:'Feliz Dia dos Namorados, {nome}! Que a vossa casa continue a ser o melhor cenário para momentos a dois. {consultor}' },
+  { dia:31, mes:10, titulo:'Halloween',             canal:'WhatsApp', msg:'Boa noite de Halloween, {nome}! Espero que a nova casa já esteja devidamente assombrada — de boas memórias. 👻 {consultor}' },
+  { dia:1,  mes:11, titulo:'Dia de Todos os Santos',canal:'WhatsApp', msg:'Bom dia, {nome}. Um momento de pausa e gratidão. Que estejam bem. {consultor}' },
+  { dia:24, mes:12, titulo:'Véspera de Natal',      canal:'WhatsApp', msg:'Boas Festas, {nome}! Que a vossa casa esteja cheia de luz, afecto e boas pessoas esta noite. {consultor}' },
+  { dia:25, mes:12, titulo:'Natal',                 canal:'WhatsApp', msg:'Feliz Natal, {nome}! O primeiro Natal na nova casa tem um sabor especial. Que seja inesquecível. {consultor}' },
+];
+
+// Gerar timeline completa com festivas e aniversários
+function gerarTL() {
+  const v = document.getElementById('c-data').value;
+  const aniv1 = document.getElementById('c-aniversario').value;
+  const aniv2 = document.getElementById('c-aniversario2').value;
+  if (!v) return TL_BASE;
+
+  const base = new Date(v); base.setHours(0,0,0,0);
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  // Janela de geração: sempre a partir de hoje (ou da escritura se for futura) até 12 meses
+  const inicio = hoje > base ? hoje : base;
+  const fim = new Date(inicio.getTime() + 366 * 86400000);
+  const extras = [];
+
+  // Datas festivas — gerar nos próximos 12 meses a partir de hoje
+  DATAS_FESTIVAS.forEach(f => {
+    [inicio.getFullYear(), inicio.getFullYear() + 1].forEach(ano => {
+      const d = new Date(ano, f.mes - 1, f.dia); d.setHours(0,0,0,0);
+      if (d >= inicio && d <= fim) {
+        const dias = Math.round((d - base) / 86400000);
+        extras.push({ dias, titulo: f.titulo, canal: f.canal,
+          msg: f.msg.replace('{ano}', ano), festiva: true });
+      }
+    });
+  });
+
+  // Aniversário cliente — próxima ocorrência a partir de hoje
+  const gerarAniv = (anivStr, titulo, msg) => {
+    if (!anivStr) return;
+    const d = new Date(anivStr);
+    [inicio.getFullYear(), inicio.getFullYear() + 1].forEach(ano => {
+      const da = new Date(ano, d.getMonth(), d.getDate()); da.setHours(0,0,0,0);
+      if (da >= inicio && da <= fim) {
+        const dias = Math.round((da - base) / 86400000);
+        extras.push({ dias, titulo, canal: 'WhatsApp', msg, aniversario: true });
+      }
+    });
+  };
+  gerarAniv(aniv1, 'Aniversário do cliente',
+    'Parabéns, {nome}! Que este aniversário seja especial — e que a nova casa torne tudo ainda melhor. {consultor}');
+  gerarAniv(aniv2, 'Aniversário (2.º titular)',
+    'Parabéns pela data especial, {nome}! Que celebrem em grande — e de preferência na nova casa. {consultor}');
+
+  // Aniversário da escritura — próxima ocorrência a partir de hoje
+  [inicio.getFullYear(), inicio.getFullYear() + 1].forEach(ano => {
+    const da = new Date(ano, base.getMonth(), base.getDate()); da.setHours(0,0,0,0);
+    if (da >= inicio && da <= fim) {
+      const anos = ano - base.getFullYear();
+      const dias = Math.round((da - base) / 86400000);
+      extras.push({ dias,
+        titulo: anos === 1 ? '1 ano de casa nova' : anos + ' anos de casa nova',
+        canal: 'WhatsApp',
+        msg: anos === 1
+          ? 'Já passou um ano, {nome}! Parece que foi ontem. Como está a nova casa a tratar-vos? {consultor}'
+          : 'Já são ' + anos + ' anos na nova casa, {nome}! Tenho muito orgulho de ter feito parte desta história. {consultor}',
+        escritura: true });
+    }
+  });
+
+  // Juntar tudo — para a aba "podes" os TL_BASE passados são ignorados em renderEstatico
+  return [...TL_BASE, ...extras].sort((a,b) => a.dias - b.dias);
+}
+
+// Alias para compatibilidade
+const TL = TL_BASE;
+
+// ════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════
+function getDiaData(dias) {
+  const v = document.getElementById('c-data').value;
+  if (!v || dias == null) return '';
+  const base = new Date(v); base.setHours(0,0,0,0);
+  const d = new Date(base.getTime() + dias * 86400000);
+  return ' <span style="font-size:9px;color:var(--text-faint);display:block;margin-top:1px">' +
+    String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '</span>';
+}
+function getNome()   { return document.getElementById('c-nome').value.trim() || '[cliente]'; }
+function getTel()    { const i=document.getElementById('c-ind').value, n=document.getElementById('c-tel').value.replace(/\s/g,''); return n ? i+n : null; }
+function getEmail()  { return document.getElementById('c-email').value.trim() || null; }
+function getDias() {
+  const v = document.getElementById('c-data').value; if (!v) return null;
+  const e = new Date(v); e.setHours(0,0,0,0);
+  const ini = document.getElementById('data-inicio').value;
+  const ref = ini ? new Date(ini) : new Date();
+  ref.setHours(0,0,0,0);
+  return Math.round((ref-e)/(1000*60*60*24));
+}
+function getHoje() {
+  const ini = document.getElementById('data-inicio').value;
+  const ref = ini ? new Date(ini) : new Date();
+  ref.setHours(0,0,0,0);
+  return ref;
+}
+function fmt(msg) {
+  return msg
+    .replace(/\{nome\}/g, getNome())
+    .replace(/\{consultor\}/g, nomeConsultor || '');
+}
+
+// ════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════
+function showTab(tab) {
+  ['plano','magico','clientes'].forEach(t => {
+    const btn = document.getElementById('tab-'+t);
+    const panel = document.getElementById('panel-'+t);
+    if (btn) btn.classList.toggle('active', t===tab);
+    if (panel) panel.classList.toggle('active', t===tab);
+  });
+  if (tab === 'clientes') carregarListaClientes();
+  if (tab === 'magico') {
+    const dias = getDias();
+    const planoEl = document.getElementById('plano-ia');
+    if (!iaGerado) renderIATriggerMagico();
+    else if (!planoEl || !planoEl.innerHTML.trim()) renderIAPlano(dias);
+    // Se já tem conteúdo e iaGerado=true, não toca — está lá
+  }
+}
+
+function renderIATriggerMagico() {
+  const temData = !!document.getElementById('c-data').value;
+  document.getElementById('plano-ia').innerHTML = `<div class="ia-trigger">
+    <p>A IA vai gerar um plano de acompanhamento personalizado para <strong>${getNome()}</strong> — com base no perfil, imóvel, contexto e no teu estilo de comunicação.</p>
+    <button class="btn-gerar-ia" onclick="gerarPlanoIA()" ${temData ? '' : 'disabled'}>🤖 Gerar plano com IA</button>
+    ${!temData ? '<span style="font-size:11px;color:var(--text-faint)">Preenche primeiro a data de escritura</span>' : ''}
+  </div>`;
+}
+
+// ════════════════════════════════════════
+// FORM CHANGE
+// ════════════════════════════════════════
+function onFormChange() {
+  // Inicializar data-inicio com hoje se estiver vazio
+  const diIni = document.getElementById('data-inicio');
+  if (diIni && !diIni.value) {
+    const hoje = getHoje();
+    diIni.value = hoje.toISOString().split('T')[0];
+  }
+  const dias = getDias();
+  const strip = document.getElementById('pc-strip');
+  if (dias === null) {
+    strip.style.display = 'none';
+    document.getElementById('plano-estatico').innerHTML = '';
+    if (!iaGerado) document.getElementById('plano-ia').innerHTML = '';
+    return;
+  }
+  const pct = Math.min(100, Math.round(dias / 365 * 100));
+  document.getElementById('strip-num').textContent = dias;
+  document.getElementById('strip-fill').style.width = pct + '%';
+  document.getElementById('strip-pct').textContent = pct + '% do 1º ano';
+  strip.style.display = 'flex';
+  renderEstatico(dias);
+}
+
+// ════════════════════════════════════════
+// PLANO ESTÁTICO
+// ════════════════════════════════════════
+function renderEstatico(dias) {
+  const tl = gerarTL();
+  const v = document.getElementById('c-data').value;
+  const base = v ? new Date(v) : null;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+
+  // Calcular data real de cada item para filtrar correctamente
+  const comData = tl.map(t => {
+    const dataReal = base ? new Date(base.getTime() + t.dias * 86400000) : null;
+    if (dataReal) dataReal.setHours(0,0,0,0);
+    return { ...t, dataReal };
+  });
+
+  const passou = comData.filter(t => t.dataReal && t.dataReal < hoje && Math.abs(t.dias - dias) > 5)
+                        .sort((a,b) => b.dias - a.dias);
+  const agora  = comData.filter(t => Math.abs(t.dias - dias) <= 5);
+  const prox   = comData.filter(t => t.dataReal && t.dataReal > hoje && Math.abs(t.dias - dias) > 5)
+                        .sort((a,b) => a.dias - b.dias);
+
+  // Sub-aba activa
+  const subAtiva = window._subTabBasico || 'podes';
+
+  // "O que ainda podes fazer" = agora + prox
+  let htmlPodes = '';
+  if (agora.length) { htmlPodes += secLabel('Para fazer agora', true); agora.forEach((it,i) => { htmlPodes += cardMomento(it, 'agora', i); }); }
+  if (prox.length)  { htmlPodes += secLabel('A seguir'); prox.forEach((it,i) => { htmlPodes += cardMomento(it, 'prox', i+100); }); }
+  if (!agora.length && !prox.length) htmlPodes = '<div style="padding:24px;text-align:center;font-size:13px;color:var(--text-faint)">Todos os momentos já passaram.</div>';
+
+  // "O que podias ter feito"
+  let htmlPassou = '';
+  if (passou.length) {
+    passou.forEach((it,i) => { htmlPassou += cardMomento(it, 'passou', i+200); });
+  } else {
+    htmlPassou = '<div style="padding:24px;text-align:center;font-size:13px;color:var(--text-faint)">Nenhum momento passou ainda — estás em dia!</div>';
+  }
+
+  const html = `
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px">
+      <button onclick="setSubTab('podes')" style="padding:8px 18px;font-size:12px;font-weight:${subAtiva==='podes'?'500':'400'};color:${subAtiva==='podes'?'var(--text)':'var(--text-faint)'};cursor:pointer;background:none;border:none;border-bottom:2px solid ${subAtiva==='podes'?'var(--accent)':'transparent'};font-family:'DM Sans',sans-serif;transition:all .15s">O que ainda podes fazer</button>
+      <button onclick="setSubTab('passou')" style="padding:8px 18px;font-size:12px;font-weight:${subAtiva==='passou'?'500':'400'};color:${subAtiva==='passou'?'var(--text)':'var(--text-faint)'};cursor:pointer;background:none;border:none;border-bottom:2px solid ${subAtiva==='passou'?'var(--danger)':'transparent'};font-family:'DM Sans',sans-serif;transition:all .15s">O que podias ter feito ${passou.length?'<span style="background:rgba(224,96,96,.12);color:var(--danger);border-radius:10px;padding:1px 6px;font-size:10px;font-family:DM Mono,monospace">'+passou.length+'</span>':''}</button>
+    </div>
+    <div id="subpanel-podes" style="display:${subAtiva==='podes'?'block':'none'}">${htmlPodes}${exportBar()}</div>
+    <div id="subpanel-passou" style="display:${subAtiva==='passou'?'block':'none'}">${htmlPassou}</div>
+    <div style="margin-top:16px;padding:16px;background:var(--accent-dim);border:1px solid rgba(201,169,110,0.2);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:13px;color:var(--accent);font-weight:500;margin-bottom:4px">Quer um plano verdadeiramente personalizado?</div>
+        <div style="font-size:12px;color:var(--text-faint)">A IA adapta cada mensagem ao perfil do cliente e ao teu estilo de comunicação.</div>
+      </div>
+      <button class="btn-gerar-ia" onclick="showTab('magico')" style="flex-shrink:0">✦ Gerar Plano Mágico</button>
+    </div>`;
+
+  document.getElementById('plano-estatico').innerHTML = html;
+  // Restaurar mensagens editadas guardadas
+  if (window._planoBasicoGuardado) restaurarPlanoBasico(window._planoBasicoGuardado);
+}
+
+function setSubTab(sub) {
+  window._subTabBasico = sub;
+  const dias = getDias();
+  if (dias !== null) renderEstatico(dias);
+}
+
+function secLabel(txt, ok=false, pass=false) {
+  const badge = ok ? '<span class="pc-badge-ok" style="font-family:DM Mono,monospace;font-size:9px;padding:1px 8px;border-radius:20px;background:rgba(74,158,107,.12);color:var(--success)">Em curso</span>'
+    : pass ? '<span style="font-family:DM Mono,monospace;font-size:9px;padding:1px 8px;border-radius:20px;background:rgba(224,96,96,.12);color:var(--danger)">Passado</span>' : '';
+  return `<div class="pc-sec-label">${txt} ${badge}</div>`;
+}
+
+function cardMomento(item, tipo, idx) {
+  const isOpen = openMomentos[idx];
+  const editId = 'edit-' + idx;
+  const msgTxt = fmt(item.msg);
+  const tel = getTel(), email = getEmail();
+  const canal = item.canal.toLowerCase();
+  let acoes = '';
+  if (canal.includes('whatsapp') && tel) acoes += `<button class="pc-btn pc-btn-wa" onclick="abrirWA('${editId}')">WhatsApp</button>`;
+  if (canal.includes('email') && email)  acoes += `<button class="pc-btn pc-btn-mail" onclick="abrirMail('${editId}','${encodeURIComponent(item.titulo)}')">Email</button>`;
+  if (canal.includes('telefone') && tel) acoes += `<a class="pc-btn pc-btn-tel" href="tel:${tel}">Ligar</a>`;
+  acoes += `<button class="pc-btn" onclick="copyMsg('${editId}',this)">Copiar</button>`;
+  if (tipo !== 'passou') { const cu = gerarCalUrl(item); acoes += `<a class="pc-btn" href="${cu}" target="_blank">+ Calendário</a>`; }
+  const msgGuardada = (window._planoBasicoGuardado && window._planoBasicoGuardado[editId]) || msgTxt;
+  let body = `<div class="pc-msg-label">Mensagem — edita antes de enviar</div>
+    <textarea class="pc-msg-edit" id="${editId}" rows="3" oninput="guardarMsgEditada('${editId}',this.value);mostrarGuardarCard('${editId}')">${msgGuardada}</textarea>
+    <div class="pc-acoes" style="justify-content:space-between;align-items:center">
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${acoes}</div>
+      <span id="save-${editId}" style="display:none;font-size:11px;color:var(--text-faint);cursor:pointer;text-decoration:underline;flex-shrink:0" onclick="guardarClienteSilencioso(this,'${editId}')">Guardar</span>
+    </div>`;
+  if (tipo === 'passou') body += `<div class="pc-aviso">Este momento já passou. Uma mensagem sincera fora de hora vale mais do que o silêncio.</div>`;
+  return `<div class="pc-momento${tipo==='agora'?' agora':''}${tipo==='passou'?' passou':''}${isOpen?' open':''}" id="mc-${idx}">
+    <div class="pc-mhead" onclick="toggleMomento(${idx})">
+      <div class="pc-mdia">Dia ${item.dias}${getDiaData(item.dias)}</div>
+      <div class="pc-mnom">${item.titulo}</div>
+      <div class="pc-mcanal">${item.canal}</div>
+      <div class="pc-mchev">▼</div>
+    </div>
+    <div class="pc-mbody">${body}</div>
+  </div>`;
+}
+
+function toggleMomento(i) {
+  openMomentos[i] = !openMomentos[i];
+  const dias = getDias();
+  if (dias !== null) renderEstatico(dias);
+}
+
+// ════════════════════════════════════════
+// TRIGGER + PLANO IA
+// ════════════════════════════════════════
+// renderIATrigger movida para renderIATriggerMagico
+
+// ════════════════════════════════════════
+// MODAL DE CONFIRMAÇÃO IA
+// ════════════════════════════════════════
+function estimarCreditosTexto(textoPrompt, tokensOutputEstimado) {
+  const tokensInput  = Math.ceil(textoPrompt.length / 3.5);
+  const tokensOutput = tokensOutputEstimado || 600;
+  return Math.ceil((tokensInput + tokensOutput) / 100);
+}
+
+function fecharConfirmIA() {
+  const el = document.getElementById('confirm-ia-overlay');
+  if (el) el.remove();
+}
+
+function abrirConfirmIA(creditosEstimados, creditosActuais, ilimitado, callback) {
+  fecharConfirmIA();
+  const descTxt = ilimitado
+    ? 'Tens acesso IA ilimitado. Clica para gerar.'
+    : 'Esta geração vai consumir aproximadamente ' + creditosEstimados + ' créditos.';
+  const saldoHTML = ilimitado
+    ? '<span style="color:var(--success)">✓ Sem consumo de créditos</span>'
+    : 'Saldo actual: <strong>' + creditosActuais.toLocaleString('pt-PT') + '</strong> cr. → após: <strong>' + Math.max(0, creditosActuais - creditosEstimados).toLocaleString('pt-PT') + '</strong> cr.';
+  const overlay = document.createElement('div');
+  overlay.id = 'confirm-ia-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.78);display:flex;align-items:center;justify-content:center;padding:20px;z-index:99999';
+  const modal = document.createElement('div');
+  modal.style.cssText = 'background:var(--bg2);border:1px solid var(--border-hover);border-radius:16px;padding:32px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,0.5);font-family:DM Sans,sans-serif';
+  modal.innerHTML =
+    '<div style="font-size:32px;margin-bottom:16px">🤖</div>' +
+    '<div style="font-family:Instrument Serif,serif;font-size:22px;color:var(--text);margin-bottom:10px;letter-spacing:-.02em">Confirmar geração</div>' +
+    '<div style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:12px">' + descTxt + '</div>' +
+    '<div style="font-size:12px;color:var(--text-faint);margin-bottom:24px;padding:10px 14px;background:var(--bg3);border-radius:8px;border:1px solid var(--border);line-height:1.6">' + saldoHTML + '</div>' +
+    '<div style="display:flex;gap:8px">' +
+      '<button id="confirm-ia-ok" style="flex:1;height:44px;background:var(--accent);color:#0c0c0b;border:none;border-radius:10px;font-family:DM Sans,sans-serif;font-size:14px;font-weight:500;cursor:pointer">Confirmar</button>' +
+      '<button id="confirm-ia-cancel" style="height:44px;padding:0 20px;background:none;border:1px solid var(--border);border-radius:10px;font-family:DM Sans,sans-serif;font-size:13px;color:var(--text-muted);cursor:pointer">Cancelar</button>' +
+    '</div>';
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  document.getElementById('confirm-ia-ok').onclick = () => { fecharConfirmIA(); callback(); };
+  document.getElementById('confirm-ia-cancel').onclick = () => fecharConfirmIA();
+  overlay.onclick = (e) => { if (e.target === overlay) fecharConfirmIA(); };
+}
+
+async function pedirConfirmacaoIA(textoPrompt, msgElId, callback) {
+  const msgEl = document.getElementById(msgElId);
+  try {
+    const { data: saldo } = await sb.from('mentorados')
+      .select('creditos_ia, acesso_ia').eq('user_id', currentUser.id).maybeSingle();
+    const ilimitado       = !!(saldo && saldo.acesso_ia);
+    const creditosActuais = saldo ? (saldo.creditos_ia || 0) : 0;
+    const creditosEst     = estimarCreditosTexto(textoPrompt, 2000);
+    if (!ilimitado && creditosActuais < creditosEst) {
+      if (msgEl) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Saldo insuficiente — precisas de ~' + creditosEst + ' créditos e tens ' + creditosActuais + '.'; }
+      return;
+    }
+    abrirConfirmIA(creditosEst, creditosActuais, ilimitado, callback);
+  } catch(e) {
+    abrirConfirmIA(estimarCreditosTexto(textoPrompt, 2000), 0, false, callback);
+  }
+}
+
+async function gerarPlanoIA() {
+  const dias = getDias();
+  const nome = getNome();
+  const nicho = document.getElementById('c-nicho').value;
+  const subnicho = document.getElementById('c-subnicho').value;
+  const tipo = document.getElementById('c-tipo-imovel').value;
+  const tipologia = document.getElementById('c-tipologia').value;
+  const cidade = document.getElementById('c-cidade').value.trim();
+  const contactosAnt = document.getElementById('c-contactos-ant').value;
+  const periodo = document.getElementById('c-periodo').value;
+  const notas = document.getElementById('c-notas').value.trim();
+
+  const aniv1 = document.getElementById('c-aniversario').value;
+  const aniv2 = document.getElementById('c-aniversario2').value;
+  const nome2 = document.getElementById('c-nome2').value.trim();
+
+  // Data de hoje explícita para passar ao prompt
+  const hojeObj = new Date();
+  const hojeStr = String(hojeObj.getDate()).padStart(2,'0') + '/' + String(hojeObj.getMonth()+1).padStart(2,'0') + '/' + hojeObj.getFullYear();
+  const anoAtual = hojeObj.getFullYear();
+
+  const formatarDataCompleta = (dateStr) => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
+  };
+
+  // Calcular próxima ocorrência do aniversário a partir de hoje
+  const proximoAniv = (dateStr) => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    const dia = d.getDate(), mes = d.getMonth();
+    let proximo = new Date(anoAtual, mes, dia);
+    if (proximo <= hojeObj) proximo = new Date(anoAtual + 1, mes, dia);
+    const diasAte = Math.round((proximo - hojeObj) / 86400000);
+    return { data: String(dia).padStart(2,'0') + '/' + String(mes+1).padStart(2,'0'), diasAte, ano: proximo.getFullYear() };
+  };
+
+  const aniv1Info = proximoAniv(aniv1);
+  const aniv2Info = proximoAniv(aniv2);
+
+  const linhaAniv1 = aniv1Info ? `\n- Aniversário do cliente: ${aniv1Info.data} — próxima ocorrência em ${aniv1Info.ano}, daqui a ${aniv1Info.diasAte} dias (dia ${aniv1Info.diasAte} no JSON). USA ESTE DIA EXACTO.` : '';
+  const linhaAniv2 = aniv2Info ? `\n- Aniversário do 2.º titular${nome2 ? ' ('+nome2+')' : ''}: ${aniv2Info.data} — próxima ocorrência em ${aniv2Info.ano}, daqui a ${aniv2Info.diasAte} dias (dia ${aniv2Info.diasAte} no JSON). USA ESTE DIA EXACTO.` : '';
+
+  const diasDesdeEscritura = dias;
+  const mesesDesdeEscritura = Math.round(diasDesdeEscritura / 30);
+  const semContactos = !contactosAnt || contactosAnt === '';
+  const poucoContacto = contactosAnt === 'poucos';
+  const apres = apresentacaoConsultor ? `\nApresentação do consultor:\n${apresentacaoConsultor}` : '';
+  const consultor = nomeConsultor ? `\nO consultor chama-se ${nomeConsultor}${telConsultor ? ', contacto: '+telConsultor : ''}.` : '';
+
+  const instrucaoEmpatia = semContactos
+    ? `ATENÇÃO: O consultor não fez qualquer contacto desde a escritura. A primeira mensagem (dia 0) deve ser a mais empática e honesta possível — uma forma de reatar o contacto com humildade, reconhecendo a ausência sem drama, mostrando que o cliente ainda importa. Não pode soar a script ou a desculpa vazia.`
+    : poucoContacto
+    ? `O consultor fez poucos contactos. A primeira mensagem deve ser calorosa e de reaproximação genuína.`
+    : `O consultor manteve contacto regular. O plano deve dar continuidade natural a esse acompanhamento.`;
+
+  const prompt = `És um especialista em acompanhamento pós-venda imobiliário em Portugal. Vais criar um plano de contacto personalizado para um consultor reactivar o acompanhamento do seu cliente.
+
+${instrucaoEmpatia}
+
+CONTEXTO TEMPORAL (usa estes valores — não inventes datas):
+- Hoje é: ${hojeStr}
+- Ano actual: ${anoAtual}
+- Os dias no JSON são relativos a hoje: dia 0 = ${hojeStr}, dia 30 = daqui a 30 dias, etc.
+
+Dados do cliente:
+- Nome: ${nome}
+- Dias desde a escritura: ${diasDesdeEscritura} (o cliente tem casa há ${mesesDesdeEscritura} meses)
+- Tipo de imóvel: ${tipo || 'não especificado'} ${tipologia || ''}
+- Cidade: ${cidade || 'não especificada'}
+- Nicho: ${nicho || 'não especificado'} — Subnicho: ${subnicho || 'não especificado'}
+- Contactos anteriores à escritura: ${contactosAnt || 'nenhum'} ${periodo ? '(período: '+periodo+')' : ''}
+- Notas e contexto pessoal: ${notas || 'nenhum'}${linhaAniv1}${linhaAniv2}${consultor}${apres}
+
+REGRAS OBRIGATÓRIAS:
+1. Usa APENAS informação que foi fornecida. Não inventes detalhes que não estão nas notas (filhos, animais, hobbies, etc.).
+2. Se há notas com contexto pessoal (ex: "têm um cão", "gémeos", "sem varanda"), usa-as de forma natural nas mensagens relevantes.
+3. Se a cidade for conhecida, podes referenciar algo genuíno da cidade (bairro, clima, vida local) — mas só se for real.
+4. As mensagens devem soar a pessoa real, não a script. Calorosas, curtas (2–3 frases), sem gerúndio, em português europeu.
+5. Adapta o conteúdo ao tempo que já passou — não fales de "mudança" ou "casa nova" como se fosse recente se já passaram meses.
+6. DATAS: Os dias no JSON são SEMPRE relativos a hoje (${hojeStr}). Dia 0 = hoje. NÃO uses datas absolutas. NÃO erres o ano — estamos em ${anoAtual}.
+7. ANIVERSÁRIOS: Se foram fornecidos aniversários, o dia exacto no JSON já está calculado acima — copia esse valor sem alterar.
+${nomeConsultor ? '8. Assina sempre como ' + nomeConsultor + '.' : ''}
+
+Cria exactamente 12 pontos de contacto ao longo dos próximos 12 meses. Os dias no JSON são relativos a hoje (dia 0 = hoje, dia 365 = daqui a um ano).
+
+Entre os 12 pontos, escolhe 1 ou 2 que sejam verdadeiramente especiais — momentos WOW que vão surpreender o cliente e que ele não espera. Esses pontos devem ter "magico":true no JSON. Devem ser criativos, inesperados, e basear-se exclusivamente no contexto real fornecido (notas, cidade, perfil). Não inventes.
+
+Responde APENAS em JSON válido, sem markdown, sem explicações. Formato exacto:
+[{"dias":0,"titulo":"Título do contacto","canal":"WhatsApp","msg":"Mensagem aqui.","magico":false},{"dias":30,"titulo":"Momento especial","canal":"WhatsApp","msg":"Mensagem surpreendente.","magico":true},...]`;
+
+  await pedirConfirmacaoIA(prompt, 'plano-ia', async () => {
+    document.getElementById('plano-ia').innerHTML = `<div class="ia-loading">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <p>A gerar o plano personalizado para ${nome}…</p>
+    </div>`;
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch('https://zsfgnzowdkwupsevsjbr.supabase.co/functions/v1/claude-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (session ? session.access_token : SB_KEY) },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', messages: [{ role: 'user', content: prompt }], max_tokens: 16000, ferramenta: 'contactos_plano' })
+      });
+      const data = await res.json();
+      const txt = data.content?.[0]?.text || '[]';
+      const planoRelativo = JSON.parse(txt.replace(/```json|```/g, '').trim());
+      iaPlano = planoRelativo.map(item => ({ ...item, dias: item.dias + diasDesdeEscritura }));
+      iaGerado = true;
+      reloadCreditos();
+      await autoGuardarComPlano();
+      renderIAPlano(dias);
+    } catch(e) {
+      document.getElementById('plano-ia').innerHTML = `<div class="ia-trigger">
+        <p style="color:var(--danger)">Erro ao gerar o plano. Tenta novamente.</p>
+        <button class="btn-gerar-ia" onclick="gerarPlanoIA()">Tentar novamente</button>
+      </div>`;
+    }
+  });
+}
+
+function renderIAPlano(dias) {
+  if (!iaPlano) return;
+  const v = document.getElementById('c-data').value;
+  const base = v ? new Date(v) : null;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+
+  const comData = iaPlano.map((t, realIdx) => {
+    const dataReal = base ? new Date(base.getTime() + t.dias * 86400000) : null;
+    if (dataReal) dataReal.setHours(0,0,0,0);
+    return { ...t, dataReal, realIdx };
+  });
+
+  const passou = comData.filter(t => t.dataReal && t.dataReal < hoje && Math.abs(t.dias - dias) > 5).sort((a,b) => b.dias - a.dias);
+  const agora  = comData.filter(t => Math.abs(t.dias - dias) <= 5);
+  const prox   = comData.filter(t => t.dataReal && t.dataReal >= hoje && Math.abs(t.dias - dias) > 5).sort((a,b) => a.dias - b.dias);
+  let html = '<div class="fade-in" style="border-top:1px solid var(--border);padding-top:20px;margin-top:8px"><div style="font-family:DM Mono,monospace;font-size:9px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">Plano gerado por IA</div>';
+  if (agora.length)  { html += secLabel('Para fazer agora', true); agora.forEach((it,i) => { html += cardIAMomento(it, 'agora', i, it.realIdx); }); }
+  if (prox.length)   { html += secLabel('A seguir'); prox.forEach((it,i) => { html += cardIAMomento(it, 'prox', i+100, it.realIdx); }); }
+  if (passou.length) { html += secLabel('O que podias ter feito', false, true); passou.forEach((it,i) => { html += cardIAMomento(it, 'passou', i+200, it.realIdx); }); }
+  html += exportBar(true);
+  html += `<div style="text-align:center;margin-top:10px"><button class="pc-btn" onclick="iaGerado=false;iaPlano=null;renderIATriggerMagico()" style="font-size:11px">Regenerar plano</button></div>`;
+  html += '</div>';
+  // Mostrar no painel mágico se estiver activo, senão guardar para quando abrir
+  const magicPanel = document.getElementById('plano-ia');
+  if (magicPanel) magicPanel.innerHTML = html;
+  // Activar a tab mágica sem chamar showTab (evita loop)
+  ['plano','magico','clientes'].forEach(t => {
+    const btn = document.getElementById('tab-'+t);
+    const panel = document.getElementById('panel-'+t);
+    if (btn) btn.classList.toggle('active', t==='magico');
+    if (panel) panel.classList.toggle('active', t==='magico');
+  });
+}
+
+function cardIAMomento(item, tipo, idx, planoIdx) {
+  if (planoIdx === undefined) planoIdx = idx;
+  const iaid = 'ia-edit-' + idx;
+  const tel = getTel(), email = getEmail();
+  const canal = item.canal.toLowerCase();
+  const eMagico = !!item.magico;
+  let acoes = '';
+  if (canal.includes('whatsapp') && tel) acoes += `<button class="pc-btn pc-btn-wa" onclick="abrirWA('${iaid}')">WhatsApp</button>`;
+  if (canal.includes('email') && email)  acoes += `<button class="pc-btn pc-btn-mail" onclick="abrirMail('${iaid}','${encodeURIComponent(item.titulo)}')">Email</button>`;
+  if (canal.includes('telefone') && tel) acoes += `<a class="pc-btn pc-btn-tel" href="tel:${tel}">Ligar</a>`;
+  acoes += `<button class="pc-btn" onclick="copyMsg('${iaid}',this)">Copiar</button>`;
+  if (tipo !== 'passou') { const cu = gerarCalUrl(item); acoes += `<a class="pc-btn" href="${cu}" target="_blank">+ Calendário</a>`; }
+  acoes += `<button class="pc-btn" style="${eMagico ? 'border-color:rgba(201,169,110,.4);color:var(--accent)' : ''}" onclick="regenerarPontoMagico(${planoIdx})">✦ Regenerar</button>`;
+  const tituloRender = eMagico ? `✦ ${item.titulo}` : item.titulo;
+  const bordaMagica = eMagico ? 'border-color:rgba(201,169,110,0.35);background:linear-gradient(135deg,var(--bg2) 0%,rgba(201,169,110,0.04) 100%)' : '';
+  const msgGuardadaIA = (window._planoIAGuardado && window._planoIAGuardado[iaid]) || item.msg;
+  let body = `<div class="pc-msg-label">${eMagico ? '✦ Ponto de Contacto Mágico — ' : ''}Mensagem gerada pela IA — edita se quiseres</div>
+    <textarea class="pc-msg-edit ia" id="${iaid}" rows="3" oninput="guardarMsgIAEditada('${iaid}',this.value);mostrarGuardarCardIA('${iaid}')">${msgGuardadaIA}</textarea>
+    <div class="pc-acoes" style="justify-content:space-between;align-items:center">
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${acoes}</div>
+      <span id="save-ia-${iaid}" style="display:none;font-size:11px;color:var(--text-faint);cursor:pointer;text-decoration:underline;flex-shrink:0" onclick="guardarClienteSilenciosoIA(this,'${iaid}')">Guardar</span>
+    </div>`;
+  if (tipo === 'passou') body += `<div class="pc-aviso">Este momento já passou. Uma mensagem sincera fora de hora vale mais do que o silêncio.</div>`;
+  return `<div class="pc-momento${tipo==='agora'?' agora':''}${tipo==='passou'?' passou':''}" style="${bordaMagica}">
+    <div class="pc-mhead" onclick="this.parentElement.classList.toggle('open')">
+      <div class="pc-mdia">Dia ${item.dias}${getDiaData(item.dias)}</div>
+      <div class="pc-mnom" style="${eMagico ? 'color:var(--accent)' : ''}">${tituloRender}</div>
+      <div class="pc-mcanal">${item.canal}</div>
+      <div class="pc-mchev">▼</div>
+    </div>
+    <div class="pc-mbody">${body}</div>
+  </div>`;
+}
+
+// ════════════════════════════════════════
+// ACÇÕES
+// ════════════════════════════════════════
+async function regenerarPontoMagico(idx) {
+  const item = iaPlano[idx];
+  if (!item) return;
+  const btn = document.querySelector(`button[onclick="regenerarPontoMagico(${idx})"]`);
+  if (btn) { btn.textContent = '...'; btn.disabled = true; }
+  const nome = getNome();
+  const notas = document.getElementById('c-notas').value.trim();
+  const cidade = document.getElementById('c-cidade').value.trim();
+  const nicho = document.getElementById('c-nicho').value;
+  const diasDesdeEscritura = getDias();
+  const promptMagico = `És um especialista em acompanhamento pós-venda imobiliário em Portugal.
+
+Cria UM novo ponto de contacto para substituir o actual. Deve ser diferente, criativo, e baseado APENAS no contexto real fornecido.
+
+Cliente: ${nome}
+Cidade: ${cidade || 'não especificada'}
+Nicho: ${nicho || 'não especificado'}
+Notas: ${notas || 'nenhuma'}
+Dias desde a escritura: ${diasDesdeEscritura}
+
+Ponto actual a substituir:
+- Título: "${item.titulo}"
+- Canal: ${item.canal}
+- Dia: ${item.dias - diasDesdeEscritura} (a partir de hoje)
+- Era mágico: ${item.magico ? 'sim' : 'não'}
+
+Cria uma alternativa completamente diferente — novo título, novo canal se fizer sentido, nova mensagem. O dia pode variar ± 7 dias em relação ao original (${item.dias - diasDesdeEscritura}). Não repitas a mesma ideia. Mensagem curta (2–3 frases), sem gerúndio, português europeu.
+
+Responde APENAS em JSON válido, sem markdown. Formato exacto (dias = dias a partir de hoje):
+{"dias":${item.dias - diasDesdeEscritura},"titulo":"Novo título","canal":"WhatsApp","msg":"Nova mensagem.","magico":${item.magico ? 'true' : 'false'}}`;
+
+  await pedirConfirmacaoIA(promptMagico, 'plano-ia', async () => {
+    if (btn) { btn.textContent = '...'; btn.disabled = true; }
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch('https://zsfgnzowdkwupsevsjbr.supabase.co/functions/v1/claude-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (session ? session.access_token : SB_KEY) },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', messages: [{ role: 'user', content: promptMagico }], max_tokens: 4000, ferramenta: 'contactos_regen' })
+      });
+      const data = await res.json();
+      const txt = data.content?.[0]?.text || '{}';
+      const novo = JSON.parse(txt.replace(/```json|```/g, '').trim());
+      novo.dias = (novo.dias || 0) + diasDesdeEscritura;
+      novo.magico = item.magico;
+      iaPlano[idx] = novo;
+      await autoGuardarComPlano();
+      reloadCreditos();
+      const planoEl = document.getElementById('plano-ia');
+      if (planoEl) planoEl.innerHTML = '';
+      renderIAPlano(diasDesdeEscritura);
+    } catch(e) {
+      if (btn) { btn.textContent = '✦ Regenerar'; btn.disabled = false; }
+    }
+  });
+}
+function abrirWA(editId) {
+  const tel = getTel(); if (!tel) return;
+  const msg = document.getElementById(editId)?.value || '';
+  window.open('https://wa.me/' + tel.replace('+','') + '?text=' + encodeURIComponent(msg), '_blank');
+}
+function abrirMail(editId, subj) {
+  const email = getEmail(); if (!email) return;
+  const body = document.getElementById(editId)?.value || '';
+  window.open('mailto:' + email + '?subject=' + subj + '&body=' + encodeURIComponent(body), '_blank');
+}
+function copyMsg(editId, btn) {
+  const txt = document.getElementById(editId)?.value || '';
+  navigator.clipboard.writeText(txt).then(() => { btn.textContent = 'Copiado ✓'; setTimeout(() => btn.textContent = 'Copiar', 2000); });
+}
+function gerarCalUrl(item) {
+  const v = document.getElementById('c-data').value; if (!v) return '#';
+  const base = new Date(v); base.setHours(0,0,0,0);
+  const target = new Date(base.getTime() + (item.dias * 86400000));
+  const f = d => `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(item.titulo+' — '+getNome())}&dates=${f(target)}/${f(target)}&details=${encodeURIComponent(item.msg||'')}`;
+}
+
+function exportBar(isIA=false) {
+  const temData = !!document.getElementById('c-data').value;
+  const dis = temData ? '' : 'disabled';
+  return `<div class="pc-export-bar">
+    <div class="pc-export-info">Exporta os contactos futuros para o calendário ou CRM.<br><span style="font-size:11px">Inclui lembrete para renovar o plano aos 380 dias.</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-ics" onclick="exportICS(${isIA})" ${dis}>📅 Calendário .ics</button>
+      <button class="btn-ics" style="border-color:rgba(74,158,107,.3);color:var(--success)" onclick="exportCSV(${isIA})" ${dis}>📊 CRM .csv</button>
+    </div>
+  </div>`;
+}
+
+function exportCSV(isIA=false) {
+  const v = document.getElementById('c-data').value; if (!v) return;
+  const base = new Date(v); base.setHours(0,0,0,0);
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const lista = isIA && iaPlano ? iaPlano : gerarTL();
+  const listaFutura = lista.filter(item => {
+    const d = new Date(base.getTime() + (item.dias * 86400000)); d.setHours(0,0,0,0);
+    return d >= hoje;
+  });
+  if (!listaFutura.length) { alert('Não há momentos futuros para exportar.'); return; }
+  const nome = document.getElementById('c-nome').value.trim() || '';
+  const nome2 = document.getElementById('c-nome2').value.trim() || '';
+  const ind = document.getElementById('c-ind').value || '+351';
+  const tel = document.getElementById('c-tel').value.trim() || '';
+  const email = document.getElementById('c-email').value.trim() || '';
+  const cidade = document.getElementById('c-cidade').value.trim() || '';
+  const nicho = document.getElementById('c-nicho').value || '';
+  const notas = document.getElementById('c-notas').value.trim() || '';
+  const telFull = tel ? ind + ' ' + tel : '';
+  const q = s => '"' + String(s||'').replace(/"/g, '""') + '"';
+  const headers = ['First Name','Last Name','Phone','Email','City','Tag','Deal Stage','Note','Task Date','Task Subject','Task Description'];
+  const rows = listaFutura.map(item => {
+    const editId = isIA ? 'ia-edit-' + listaFutura.indexOf(item) : 'edit-' + lista.indexOf(item);
+    const el = document.getElementById(editId);
+    const msg = el ? el.value : (isIA ? item.msg : fmt(item.msg));
+    const d = new Date(base.getTime() + (item.dias * 86400000));
+    const dataStr = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+    const nomeParts = nome.split(' ');
+    const firstName = nomeParts[0] || '';
+    const lastName = nomeParts.slice(1).join(' ') || '';
+    return [q(firstName), q(lastName), q(telFull), q(email), q(cidade), q(nicho), q('Pos-Escritura'), q(notas), q(dataStr), q(item.titulo), q(msg)];
+  });
+  const csv = '\uFEFF' + [headers.map(q), ...rows].map(r => r.join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = 'crm-' + (nome||'cliente').replace(/\s+/g,'-').toLowerCase() + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function exportICS(isIA=false) {
+  const v = document.getElementById('c-data').value; if (!v) return;
+  const base = new Date(v); base.setHours(0,0,0,0);
+  const now = new Date().toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+  const lista = isIA && iaPlano ? iaPlano : gerarTL();
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const listaFutura = lista.filter(item => {
+    const d = new Date(base.getTime() + (item.dias * 86400000)); d.setHours(0,0,0,0);
+    return d >= hoje;
+  });
+  if (!listaFutura.length) { alert('Não há momentos futuros para exportar.'); return; }
+  let ics = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Portal CPCV//PT\r\nCALSCALE:GREGORIAN\r\n`;
+  listaFutura.forEach((item, i) => {
+    const editId = isIA ? `ia-edit-${i}` : `edit-${i}`;
+    const el = document.getElementById(editId);
+    const msgFinal = el ? el.value : (isIA ? item.msg : fmt(item.msg));
+    const d = new Date(base.getTime() + (item.dias * 86400000));
+    const df = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    ics += `BEGIN:VEVENT\r\nUID:cpcv-${isIA?'ia':'st'}-${i}-${Date.now()}@portal\r\nDTSTAMP:${now}\r\nDTSTART;VALUE=DATE:${df}\r\nDTEND;VALUE=DATE:${df}\r\nSUMMARY:${item.titulo} — ${getNome()}\r\nDESCRIPTION:${msgFinal.replace(/\n/g,'\\n')}\r\nEND:VEVENT\r\n`;
+  });
+  const d380 = new Date(base.getTime() + (380 * 86400000));
+  const df380 = `${d380.getFullYear()}${String(d380.getMonth()+1).padStart(2,'0')}${String(d380.getDate()).padStart(2,'0')}`;
+  ics += `BEGIN:VEVENT\r\nUID:cpcv-renovar-${Date.now()}@portal\r\nDTSTAMP:${now}\r\nDTSTART;VALUE=DATE:${df380}\r\nDTEND;VALUE=DATE:${df380}\r\nSUMMARY:Renovar plano de contacto — ${getNome()}\r\nDESCRIPTION:O plano de acompanhamento de ${getNome()} chegou ao fim.\\nGera um novo plano no Portal CPCV.\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = `pos-escritura-${getNome().replace(/\s+/g,'-').toLowerCase()}.ics`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ════════════════════════════════════════
+// GUARDAR / RESTAURAR PLANO BÁSICO
+// ════════════════════════════════════════
+function guardarMsgEditada(id, valor) {
+  if (!window._planoBasicoGuardado) window._planoBasicoGuardado = {};
+  window._planoBasicoGuardado[id] = valor;
+}
+
+function guardarMsgIAEditada(id, valor) {
+  if (!window._planoIAGuardado) window._planoIAGuardado = {};
+  window._planoIAGuardado[id] = valor;
+  // Actualizar também o iaPlano em memória
+  const idx = parseInt(id.replace('ia-edit-', ''));
+  if (iaPlano && iaPlano[idx]) iaPlano[idx].msg = valor;
+}
+
+function mostrarGuardarCard(editId) {
+  const el = document.getElementById('save-' + editId);
+  if (el) el.style.display = 'inline';
+}
+
+function mostrarGuardarCardIA(iaid) {
+  const el = document.getElementById('save-ia-' + iaid);
+  if (el) el.style.display = 'inline';
+}
+
+async function guardarClienteSilencioso(linkEl, editId) {
+  if (!currentUser) return;
+  const id = document.getElementById('cliente-id').value;
+  if (!id) { guardarCliente(); return; }
+  linkEl.textContent = '...'; linkEl.style.pointerEvents = 'none';
+  const { error } = await sb.from('clientes_pos_escritura')
+    .update({ plano_basico: serializarPlanoBasico(), atualizado_at: new Date().toISOString() })
+    .eq('id', id).eq('user_id', currentUser.id);
+  if (error) { linkEl.textContent = 'Erro'; linkEl.style.color = 'var(--danger)'; }
+  else { linkEl.textContent = '✓ Guardado'; linkEl.style.color = 'var(--success)';
+    setTimeout(() => { linkEl.style.display = 'none'; linkEl.textContent = 'Guardar'; linkEl.style.color = 'var(--text-faint)'; linkEl.style.pointerEvents = ''; }, 2000); }
+}
+
+async function guardarClienteSilenciosoIA(linkEl, iaid) {
+  if (!currentUser) return;
+  const id = document.getElementById('cliente-id').value;
+  if (!id) { guardarCliente(); return; }
+  linkEl.textContent = '...'; linkEl.style.pointerEvents = 'none';
+  const { error } = await sb.from('clientes_pos_escritura')
+    .update({ plano_ia: iaPlano, atualizado_at: new Date().toISOString() })
+    .eq('id', id).eq('user_id', currentUser.id);
+  if (error) { linkEl.textContent = 'Erro'; linkEl.style.color = 'var(--danger)'; }
+  else { linkEl.textContent = '✓ Guardado'; linkEl.style.color = 'var(--success)';
+    setTimeout(() => { linkEl.style.display = 'none'; linkEl.textContent = 'Guardar'; linkEl.style.color = 'var(--text-faint)'; linkEl.style.pointerEvents = ''; }, 2000); }
+}
+
+function serializarPlanoBasico() {
+  const plano = window._planoBasicoGuardado;
+  return plano && Object.keys(plano).length ? plano : null;
+}
+
+function restaurarPlanoBasico(plano) {
+  if (!plano) return;
+  window._planoBasicoGuardado = plano;
+  // Os valores são aplicados no render via msgGuardada
+}
+
+async function autoGuardarComPlano() {
+  // Guarda cliente completo com plano_ia — cria se não existir, actualiza se já existir
+  const id = document.getElementById('cliente-id').value;
+  const dados = {
+    user_id: currentUser.id,
+    nome: document.getElementById('c-nome').value.trim() || null,
+    nome2: document.getElementById('c-nome2').value.trim() || null,
+    data_escritura: document.getElementById('c-data').value || null,
+    indicativo: document.getElementById('c-ind').value,
+    telefone: document.getElementById('c-tel').value.trim() || null,
+    email: document.getElementById('c-email').value.trim() || null,
+    tipo_imovel: document.getElementById('c-tipo-imovel').value || null,
+    tipologia: document.getElementById('c-tipologia').value || null,
+    cidade: document.getElementById('c-cidade').value.trim() || null,
+    nicho: document.getElementById('c-nicho').value || null,
+    subgrupo: document.getElementById('c-subgrupo').value || null,
+    subnicho: document.getElementById('c-subnicho').value || null,
+    aniversario: document.getElementById('c-aniversario').value || null,
+    aniversario2: document.getElementById('c-aniversario2').value || null,
+    contactos_anteriores: document.getElementById('c-contactos-ant').value || null,
+    periodo_contactos: document.getElementById('c-periodo').value || null,
+    detalhe: document.getElementById('c-notas').value.trim() || null,
+    plano_ia: iaPlano,
+    plano_basico: serializarPlanoBasico(),
+    atualizado_at: new Date().toISOString()
+  };
+  if (id) {
+    await sb.from('clientes_pos_escritura').update(dados).eq('id', id).eq('user_id', currentUser.id);
+  } else {
+    const { data: novo } = await sb.from('clientes_pos_escritura').insert(dados).select('id').single();
+    if (novo?.id) document.getElementById('cliente-id').value = novo.id;
+  }
+}
+
+
+async function guardarCliente() {
+  const btn = document.getElementById('btn-guardar-cliente');
+  const msg = document.getElementById('msg-guardar');
+  const id = document.getElementById('cliente-id').value;
+  btn.textContent = 'A guardar...';
+  const dados = {
+    user_id: currentUser.id,
+    nome: document.getElementById('c-nome').value.trim() || null,
+    nome2: document.getElementById('c-nome2').value.trim() || null,
+    data_escritura: document.getElementById('c-data').value || null,
+    indicativo: document.getElementById('c-ind').value,
+    telefone: document.getElementById('c-tel').value.trim() || null,
+    email: document.getElementById('c-email').value.trim() || null,
+    tipo_imovel: document.getElementById('c-tipo-imovel').value || null,
+    tipologia: document.getElementById('c-tipologia').value || null,
+    cidade: document.getElementById('c-cidade').value.trim() || null,
+    nicho: document.getElementById('c-nicho').value || null,
+    subgrupo: document.getElementById('c-subgrupo').value || null,
+    subnicho: document.getElementById('c-subnicho').value || null,
+    aniversario: document.getElementById('c-aniversario').value || null,
+    aniversario2: document.getElementById('c-aniversario2').value || null,
+    contactos_anteriores: document.getElementById('c-contactos-ant').value ? document.getElementById('c-contactos-ant').value : null,
+    periodo_contactos: document.getElementById('c-periodo').value || null,
+    detalhe: document.getElementById('c-notas').value.trim() || null,
+    plano_ia: iaGerado && iaPlano ? iaPlano : null,
+    plano_basico: serializarPlanoBasico(),
+    atualizado_at: new Date().toISOString()
+  };
+  let error;
+  if (id) {
+    ({ error } = await sb.from('clientes_pos_escritura').update(dados).eq('id', id).eq('user_id', currentUser.id));
+  } else {
+    const { data: novo, error: err } = await sb.from('clientes_pos_escritura').insert(dados).select('id').single();
+    error = err;
+    if (novo?.id) document.getElementById('cliente-id').value = novo.id;
+  }
+  btn.textContent = 'Guardar cliente';
+  if (error) { msg.style.color = 'var(--danger)'; msg.textContent = 'Erro: ' + error.message; }
+  else { msg.style.color = 'var(--success)'; msg.textContent = '✓ Guardado!'; setTimeout(() => msg.textContent = '', 2500); }
+}
+
+async function carregarListaClientes() {
+  const lista = document.getElementById('clientes-lista');
+  lista.innerHTML = '<div class="pc-empty">A carregar...</div>';
+  const { data, error } = await sb.from('clientes_pos_escritura')
+    .select('id,nome,data_escritura,tipo_imovel,tipologia,cidade,nicho,subnicho,atualizado_at')
+    .eq('user_id', currentUser.id)
+    .order('atualizado_at', { ascending: false });
+  if (error || !data?.length) {
+    lista.innerHTML = '<div class="pc-empty">Nenhum cliente guardado ainda.</div>';
+    const cnt = document.getElementById('tab-clientes-count'); if (cnt) cnt.textContent = '';
+    return;
+  }
+  const cnt = document.getElementById('tab-clientes-count'); if (cnt) cnt.textContent = '(' + data.length + ')';
+  let html = `<div class="pc-section"><div style="overflow-x:auto"><table class="pc-clientes-table"><thead><tr>
+    <th>Nome</th><th>Escritura</th><th>Imóvel</th><th>Cidade</th><th>Nicho</th><th>Actualizado</th><th></th>
+  </tr></thead><tbody>`;
+  data.forEach(c => {
+    const dataE = c.data_escritura ? new Date(c.data_escritura).toLocaleDateString('pt-PT') : '—';
+    const dataU = c.atualizado_at ? new Date(c.atualizado_at).toLocaleDateString('pt-PT') : '—';
+    const imovel = [c.tipo_imovel, c.tipologia].filter(Boolean).join(' ') || '—';
+    html += `<tr>
+      <td style="font-weight:500;color:var(--text)">${c.nome || '—'}</td>
+      <td>${dataE}</td>
+      <td>${imovel}</td>
+      <td>${c.cidade || '—'}</td>
+      <td>${c.nicho || '—'}</td>
+      <td>${dataU}</td>
+      <td style="display:flex;gap:6px;justify-content:flex-end">
+        <button class="btn-carregar" onclick="carregarCliente('${c.id}')">Carregar</button>
+        <button class="btn-apagar-c" onclick="apagarCliente('${c.id}')" title="Apagar">✕</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table></div></div>';
+  lista.innerHTML = html;
+}
+
+async function carregarCliente(id) {
+  const { data, error } = await sb.from('clientes_pos_escritura').select('*').eq('id', id).single();
+  if (error || !data) { alert('Erro ao carregar cliente.'); return; }
+  document.getElementById('cliente-id').value = data.id;
+  document.getElementById('c-nome').value = data.nome || '';
+  document.getElementById('c-nome2').value = data.nome2 || '';
+  document.getElementById('c-data').value = data.data_escritura || '';
+  document.getElementById('c-ind').value = data.indicativo || '+351';
+  document.getElementById('c-tel').value = data.telefone || '';
+  document.getElementById('c-email').value = data.email || '';
+  document.getElementById('c-tipo-imovel').value = data.tipo_imovel || '';
+  document.getElementById('c-tipo-imovel').classList.toggle('empty', !data.tipo_imovel);
+  document.getElementById('c-tipologia').value = data.tipologia || '';
+  document.getElementById('c-tipologia').classList.toggle('empty', !data.tipologia);
+  document.getElementById('c-cidade').value = data.cidade || '';
+  // Nicho, subgrupo e subnicho
+  const nichoSel = document.getElementById('c-nicho');
+  nichoSel.value = data.nicho || '';
+  nichoSel.classList.toggle('empty', !data.nicho);
+  if (data.nicho) {
+    updateSubgrupo();
+    if (data.subgrupo) {
+      document.getElementById('c-subgrupo').value = data.subgrupo;
+      document.getElementById('c-subgrupo').classList.remove('empty');
+      updateSubnicho();
+      document.getElementById('c-subnicho').value = data.subnicho || '';
+    }
+  }
+  // Aniversários
+  if (data.aniversario) document.getElementById('c-aniversario').value = data.aniversario;
+  if (data.aniversario2) document.getElementById('c-aniversario2').value = data.aniversario2;
+  document.getElementById('c-contactos-ant').value = data.contactos_anteriores || '';
+  document.getElementById('c-contactos-ant').classList.toggle('empty', !data.contactos_anteriores);
+  document.getElementById('c-periodo').value = data.periodo_contactos || '';
+  document.getElementById('c-periodo').classList.toggle('empty', !data.periodo_contactos);
+  document.getElementById('c-notas').value = data.detalhe || '';
+  // Plano IA guardado
+  if (data.plano_ia) { iaPlano = data.plano_ia; iaGerado = true; }
+  else { iaPlano = null; iaGerado = false; }
+  window._planoBasicoGuardado = data.plano_basico || null;
+  window._planoIAGuardado = null;
+  showTab('plano');
+  onFormChange();
+  if (iaGerado) renderIAPlano(getDias());
+}
+
+async function apagarCliente(id) {
+  if (!confirm('Apagar este cliente?')) return;
+  await sb.from('clientes_pos_escritura').delete().eq('id', id).eq('user_id', currentUser.id);
+  carregarListaClientes();
+}
+
+function limparFormulario() {
+  document.getElementById('cliente-id').value = '';
+  ['c-nome','c-nome2','c-data','c-tel','c-email','c-cidade','c-notas'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  ['c-tipo-imovel','c-tipologia','c-nicho','c-subnicho','c-contactos-ant','c-periodo'].forEach(id => {
+    const el = document.getElementById(id); if(el) { el.value = ''; el.classList.add('empty'); }
+  });
+  document.getElementById('c-ind').value = '+351';
+  iaPlano = null; iaGerado = false; openMomentos = {};
+  window._planoBasicoGuardado = null;
+  window._planoIAGuardado = null;
+  document.getElementById('pc-strip').style.display = 'none';
+  document.getElementById('plano-estatico').innerHTML = '';
+  document.getElementById('plano-ia').innerHTML = '';
+  document.getElementById('msg-guardar').textContent = '';
+}
+
+// ════════════════════════════════════════
+// CRÉDITOS / TOPBAR
+// ════════════════════════════════════════
+// reloadCreditos — usa a API do topbar.js do GitHub
+async function reloadCreditos() {
+  if (!currentUser) return;
+  const { data } = await sb.from('mentorados').select('creditos_ia,acesso_ia').eq('user_id', currentUser.id).maybeSingle();
+  if (data) CPCVTopbar.setCreditos(data.creditos_ia || 0, data.acesso_ia);
+}
+</script>
+</body>
+</html>
