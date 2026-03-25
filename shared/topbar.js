@@ -185,25 +185,25 @@
   window.CPCVTopbar = {
     _onComprar: function() {
       var p = document.getElementById('cpcv-painel-comprar');
-      if (p) { p.style.display = p.style.display === 'none' ? 'block' : 'none'; return; }
+      if (p) { p.style.display = p.style.display === 'none' ? 'flex' : 'none'; return; }
       var el = document.createElement('div');
       el.id = 'cpcv-painel-comprar';
-      el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:var(--bg2,#141413);border-top:1px solid rgba(255,255,255,0.10);padding:20px 28px 28px;z-index:9999;font-family:\'DM Sans\',sans-serif;animation:cpcvSlideUp .2s ease';
-      el.innerHTML = '<style>@keyframes cpcvSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>'
+      el.style.cssText = 'position:fixed;bottom:0;left:0;right:0;width:100%;background:var(--bg2,#141413);border-top:1px solid rgba(255,255,255,0.10);padding:20px 28px 28px;z-index:99999;font-family:\'DM Sans\',sans-serif;box-sizing:border-box';
+      el.innerHTML = '<style>@keyframes cpcvUp{from{transform:translateY(100%)}to{transform:translateY(0)}}#cpcv-painel-comprar{animation:cpcvUp .2s ease}</style>'
         + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
         + '<div style="font-size:15px;font-weight:500;color:var(--text,#f0ede8)">Comprar creditos IA</div>'
-        + '<button onclick="document.getElementById(\'cpcv-painel-comprar\').style.display=\'none\'" style="background:none;border:none;color:var(--text-muted,#a8a5a0);cursor:pointer;font-size:18px;line-height:1">x</button>'
+        + '<button onclick="document.getElementById(\'cpcv-painel-comprar\').style.display=\'none\'" style="background:none;border:none;color:var(--text-muted,#a8a5a0);cursor:pointer;font-size:20px;padding:0;line-height:1">&times;</button>'
         + '</div>'
-        + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px">'
-        + ['100 cr. — 5€','500 cr. — 20€','1000 cr. — 35€','2000 cr. — 75€','3000 cr. — 100€'].map(function(p,i){
-            return '<div style="background:var(--bg,#0c0c0b);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:border-color .12s" '
-              + 'onmouseover="this.style.borderColor=\'rgba(201,169,110,0.4)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,0.07)\'">'
-              + '<div style="font-family:\'DM Mono\',monospace;font-size:13px;color:var(--accent,#c9a96e)">' + p.split(' — ')[0] + '</div>'
-              + '<div style="font-size:12px;color:var(--text-muted,#a8a5a0);margin-top:4px">' + p.split(' — ')[1] + '</div>'
+        + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">'
+        + [['100 cr.','5€'],['500 cr.','20€'],['1000 cr.','35€'],['2000 cr.','75€'],['3000 cr.','100€']].map(function(p){
+            return '<div style="flex:1;min-width:100px;background:var(--bg,#0c0c0b);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color .12s;text-align:center"'
+              + ' onmouseover="this.style.borderColor=\'rgba(201,169,110,0.4)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,0.07)\'">'
+              + '<div style="font-family:\'DM Mono\',monospace;font-size:14px;font-weight:500;color:var(--accent,#c9a96e)">' + p[0] + '</div>'
+              + '<div style="font-size:12px;color:var(--text-muted,#a8a5a0);margin-top:4px">' + p[1] + '</div>'
               + '</div>';
           }).join('')
         + '</div>'
-        + '<div style="font-size:12px;color:var(--text-faint,#4a4845)">Para comprar, envia email para <a href="mailto:academia@novoimobiliario.com" style="color:var(--accent,#c9a96e)">academia@novoimobiliario.com</a> com o pacote pretendido. Recebes as instrucoes de pagamento e os creditos sao atribuidos apos confirmacao.</div>';
+        + '<div style="font-size:12px;color:var(--text-faint,#4a4845)">Para comprar envia email para <a href="mailto:academia@novoimobiliario.com" style="color:var(--accent,#c9a96e)">academia@novoimobiliario.com</a> com o pacote pretendido. Recebes as instrucoes de pagamento e os creditos sao atribuidos apos confirmacao.</div>';
       document.body.appendChild(el);
     },
 
