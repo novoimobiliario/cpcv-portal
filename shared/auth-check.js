@@ -1,0 +1,177 @@
+/**
+ * auth-check.js — Verificacao de sessao · Ecossistema CPCV
+ * Repositorio: github.com/novoimobiliario/cpcv-portal
+ * Versao: 1.0 · Marco 2026
+ *
+ * Uso numa pagina interna:
+ *   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ *   <script src="https://cdn.jsdelivr.net/gh/novoimobiliario/cpcv-portal@main/shared/auth-check.js"></script>
+ *   O conteudo da pagina fica oculto ate a sessao ser confirmada.
+ *   Expoe: window.CPCV.sb, window.CPCV.currentUser, window.CPCV.mentorado
+ *   Dispara: evento 'cpcv:pronto' quando a sessao esta confirmada
+ */
+(function() {
+  'use strict';
+
+  var SB_URL = 'https://zsfgnzowdkwupsevsjbr.supabase.co';
+  var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzZmduem93ZGt3dXBzZXZzamJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMzcyMTIsImV4cCI6MjA4OTYxMzIxMn0.nQIQnwIdVZjoTPOVmDNIAbS7_jT5WxYs9DBGQWV2CEw';
+
+  var MENSAGENS = [
+    'A verificar se\u00e9s mesmo tu\u2026',
+    'S\u00f3 um segundo, o Pinheirinho est\u00e1 a abrir a porta\u2026',
+    'A carregar o teu espa\u00e7o de mentoria\u2026',
+    'A confirmar que n\u00e3o \u00e9s um robot\u2026 ou \u00e9s?',
+    'A preparar as tuas ferramentas\u2026',
+    'Quase l\u00e1. O m\u00e9todo CPCV tamb\u00e9m leva o seu tempo.',
+    'A verificar o teu acesso. Prometemos que \u00e9 r\u00e1pido.',
+    'Um momento. Estamos a afinar os detalhes para ti.',
+    'A verificar se mereces aceder\u2026',
+  ];
+
+  // ── CSS do loading screen ──────────────────────────────────────────────
+  var CSS = '\
+#cpcv-auth-loading{\
+  position:fixed;inset:0;\
+  background:var(--bg,#0c0c0b);\
+  z-index:99999;\
+  display:flex;\
+  flex-direction:column;\
+  align-items:center;\
+  justify-content:center;\
+  gap:20px;\
+  font-family:\'DM Sans\',sans-serif;\
+  transition:opacity .4s ease;\
+}\
+#cpcv-auth-loading.fade-out{\
+  opacity:0;\
+  pointer-events:none;\
+}\
+.cpcv-auth-logo{\
+  width:48px;height:48px;\
+  border-radius:12px;\
+  background:#111;\
+  border:1px solid rgba(255,255,255,.14);\
+  display:flex;align-items:center;justify-content:center;\
+  margin-bottom:8px;\
+}\
+.cpcv-auth-logo img{\
+  width:30px;height:30px;\
+  object-fit:contain;\
+  filter:brightness(0) invert(1);\
+}\
+.cpcv-auth-spinner{\
+  width:32px;height:32px;\
+  border:2px solid rgba(201,169,110,.2);\
+  border-top-color:var(--accent,#c9a96e);\
+  border-radius:50%;\
+  animation:cpcv-spin .8s linear infinite;\
+}\
+@keyframes cpcv-spin{to{transform:rotate(360deg)}}\
+.cpcv-auth-msg{\
+  font-size:13px;\
+  color:var(--text-muted,#8a8880);\
+  letter-spacing:.01em;\
+  text-align:center;\
+  max-width:280px;\
+  line-height:1.5;\
+}\
+';
+
+  // ── Injectar CSS e loading screen ────────────────────────────────────
+  function injectLoading() {
+    var style = document.createElement('style');
+    style.textContent = CSS;
+    document.head.appendChild(style);
+
+    var msg = MENSAGENS[Math.floor(Math.random() * MENSAGENS.length)];
+
+    var el = document.createElement('div');
+    el.id = 'cpcv-auth-loading';
+    el.innerHTML = '\
+<div class="cpcv-auth-logo">\
+  <img src="https://cpcv.pt/logo-cpcv.png" alt="CPCV">\
+</div>\
+<div class="cpcv-auth-spinner"></div>\
+<div class="cpcv-auth-msg" id="cpcv-auth-msg">' + msg + '</div>\
+';
+
+    // Esconder o body ate confirmar sessao
+    document.body.style.visibility = 'hidden';
+    document.body.appendChild(el);
+  }
+
+  // ── Remover loading screen ───────────────────────────────────────────
+  function removeLoading() {
+    var el = document.getElementById('cpcv-auth-loading');
+    if (!el) return;
+    document.body.style.visibility = '';
+    el.classList.add('fade-out');
+    setTimeout(function() { el.parentNode && el.parentNode.removeChild(el); }, 450);
+  }
+
+  // ── Inicializar ──────────────────────────────────────────────────────
+  function init() {
+    injectLoading();
+
+    if (!window.supabase) {
+      console.error('[auth-check.js] supabase-js nao encontrado.');
+      window.location.href = 'https://cpcv.pt/portal.html';
+      return;
+    }
+
+    var sb = window.supabase.createClient(SB_URL, SB_KEY);
+    window.CPCV = window.CPCV || {};
+    window.CPCV.sb = sb;
+
+    sb.auth.getSession().then(function(result) {
+      var session = result.data && result.data.session;
+
+      if (!session) {
+        window.location.href = 'https://cpcv.pt/portal.html';
+        return;
+      }
+
+      window.CPCV.currentUser = session.user;
+
+      // Carregar dados do mentorado
+      sb.from('mentorados')
+        .select('nome,role,creditos_ia,acesso_ia,telefone,email')
+        .eq('user_id', session.user.id)
+        .maybeSingle()
+        .then(function(res) {
+          if (res.data) {
+            window.CPCV.mentorado = res.data;
+            window._cpvcUserEmail = session.user.email;
+          }
+
+          removeLoading();
+
+          // Disparar evento para que a pagina saiba que esta pronta
+          document.dispatchEvent(new CustomEvent('cpcv:pronto', {
+            detail: {
+              user: session.user,
+              mentorado: res.data || null,
+              sb: sb
+            }
+          }));
+        })
+        .catch(function(err) {
+          console.warn('[auth-check.js] mentorados:', err.message);
+          removeLoading();
+          document.dispatchEvent(new CustomEvent('cpcv:pronto', {
+            detail: { user: session.user, mentorado: null, sb: sb }
+          }));
+        });
+    }).catch(function() {
+      window.location.href = 'https://cpcv.pt/portal.html';
+    });
+  }
+
+  // Correr quando o DOM estiver pronto
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
