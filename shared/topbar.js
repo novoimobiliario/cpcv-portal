@@ -163,7 +163,7 @@
     <span class="cpcv-tb-logo-name">Ecossistema <span>CPCV</span></span>
   </div>
   <nav class="cpcv-tb-nav">
-    <button class="cpcv-tb-btn" onclick="history.back()">Modulos</button>
+    <button class="cpcv-tb-btn" onclick="window.location.href='https://cpcv.pt/portal.html'">Modulos</button>
     ${opts.modulo ? `<button class="cpcv-tb-btn active">${opts.modulo}</button>` : ''}
   </nav>
   <div class="cpcv-tb-cred" id="cpcv-tb-cred" style="display:none">
