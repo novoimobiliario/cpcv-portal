@@ -186,9 +186,13 @@
     _email: null,
 
     _onComprar: function() {
-      if (!document.getElementById('cpcv-painel-creditos')) CPCVTopbar._injectPainel();
       var p = document.getElementById('cpcv-painel-creditos');
-      if (p) p.style.display = p.style.display === 'none' ? 'block' : 'none';
+      // Se o painel já existe e está visível, fechar
+      if (p && p.style.display !== 'none') { p.style.display = 'none'; return; }
+      // Se já existe mas está oculto (pacotes já carregados), mostrar
+      if (p) { p.style.display = 'block'; return; }
+      // Primeira vez: injectar e só mostrar após carregar pacotes
+      CPCVTopbar._injectPainel();
     },
 
     _injectPainel: function() {
@@ -221,6 +225,9 @@
             {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34€',popular:true},
           ];
           CPCVTopbar._renderPacotes(pacotes);
+          // Mostrar painel só após os pacotes estarem prontos
+          var p = document.getElementById('cpcv-painel-creditos');
+          if (p) p.style.display = 'block';
         });
       } else {
         var pacotes = [
@@ -230,6 +237,8 @@
           {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34€',popular:true},
         ];
         CPCVTopbar._renderPacotes(pacotes);
+        var p = document.getElementById('cpcv-painel-creditos');
+        if (p) p.style.display = 'block';
       }
     },
 
