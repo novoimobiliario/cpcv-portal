@@ -133,7 +133,26 @@
 
       window.CPCV.currentUser = session.user;
 
-      // Carregar dados do mentorado
+      // Verificar se o portal está activo (excepto para admins)
+      sb.from('configuracoes').select('valor').eq('chave','portal_ativo').maybeSingle().then(function(cfg) {
+        var portalAtivo = !cfg.data || cfg.data.valor !== 'false';
+        if (!portalAtivo) {
+          // Verificar se é admin — admins passam sempre
+          sb.from('mentorados').select('role').eq('user_id', session.user.id).maybeSingle().then(function(r) {
+            if (r.data && r.data.role === 'admin') {
+              carregarMentorado(sb, session);
+            } else {
+              window.location.href = 'https://cpcv.pt/manutencao.html';
+            }
+          });
+        } else {
+          carregarMentorado(sb, session);
+        }
+      });
+    });
+  }
+
+  function carregarMentorado(sb, session) {
       sb.from('mentorados')
         .select('nome,role,creditos_ia,acesso_ia,telefone,email')
         .eq('user_id', session.user.id)
@@ -162,9 +181,6 @@
             detail: { user: session.user, mentorado: null, sb: sb }
           }));
         });
-    }).catch(function() {
-      window.location.href = 'https://cpcv.pt/portal.html';
-    });
   }
 
   // Correr quando o DOM estiver pronto
