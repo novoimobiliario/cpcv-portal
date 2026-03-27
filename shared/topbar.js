@@ -368,6 +368,91 @@
     setEmail: function(email) {
       CPCVTopbar._email = email;
       window._cpvcUserEmail = email;
+    },
+
+    // ── Confirmação IA — modal partilhado com estimativa ajustada ao multiplicador ──
+    pedirConfirmacao: async function(textoPrompt, callback, opcoes) {
+      // opcoes: { msgElId, tokensOutputEstimado }
+      var msgElId = opcoes && opcoes.msgElId;
+      var tokensOut = (opcoes && opcoes.tokensOutputEstimado) || 1500;
+      var msgEl = msgElId ? document.getElementById(msgElId) : null;
+
+      try {
+        // Buscar multiplicador e saldo em paralelo
+        var sb = window.CPCV && window.CPCV.sb;
+        var user = window.CPCV && window.CPCV.currentUser;
+        if (!sb || !user) { if (callback) callback(); return; }
+
+        var results = await Promise.all([
+          sb.from('configuracoes').select('valor').eq('chave','multiplicador_creditos').maybeSingle(),
+          sb.from('mentorados').select('creditos_ia,acesso_ia').eq('user_id', user.id).maybeSingle()
+        ]);
+
+        var mult = parseFloat(results[0].data && results[0].data.valor || '1') || 1;
+        var tokensPorCr = Math.max(1, Math.round(100 / mult));
+        var saldo = results[1].data || {};
+        var ilimitado = !!saldo.acesso_ia;
+        var creditosActuais = saldo.creditos_ia || 0;
+
+        // Calcular estimativa com multiplicador real
+        var tokensInput = Math.ceil(textoPrompt.length / 3.5);
+        var creditosEst = Math.ceil((tokensInput + tokensOut) / tokensPorCr);
+
+        if (!ilimitado && creditosActuais < creditosEst) {
+          if (msgEl) { msgEl.style.color = 'var(--danger, #e06060)'; msgEl.textContent = 'Saldo insuficiente — precisas de ~' + creditosEst + ' cr. e tens ' + creditosActuais + '.'; }
+          return;
+        }
+
+        CPCVTopbar._abrirConfirmModal(creditosEst, creditosActuais, ilimitado, mult, tokensPorCr, callback);
+
+      } catch(e) {
+        // Fallback sem multiplicador
+        var tokensInput2 = Math.ceil(textoPrompt.length / 3.5);
+        var creditosEst2 = Math.ceil((tokensInput2 + tokensOut) / 100);
+        CPCVTopbar._abrirConfirmModal(creditosEst2, CPCVTopbar._creditos || 0, false, 1, 100, callback);
+      }
+    },
+
+    _abrirConfirmModal: function(creditosEst, creditosActuais, ilimitado, mult, tokensPorCr, callback) {
+      var existing = document.getElementById('cpcv-confirm-ia-overlay');
+      if (existing) existing.remove();
+
+      var descTxt = ilimitado
+        ? 'Tens acesso IA ilimitado. Clica para gerar.'
+        : 'Esta geração vai consumir ~' + creditosEst + ' crédito' + (creditosEst !== 1 ? 's' : '') + '.';
+
+      var saldoHTML = ilimitado
+        ? '<span style="color:var(--success,#4a9e6b)">&#10003; Sem consumo de créditos</span>'
+        : 'Saldo: <strong>' + creditosActuais.toLocaleString('pt-PT') + '</strong> cr. &rarr; após: <strong>' + Math.max(0, creditosActuais - creditosEst).toLocaleString('pt-PT') + '</strong> cr.';
+
+      var multInfo = mult !== 1
+        ? '<div style="font-size:11px;color:var(--text-faint,#4a4845);margin-top:4px">Multiplicador activo: ' + mult + '× (' + tokensPorCr + ' tokens/cr)</div>'
+        : '';
+
+      var overlay = document.createElement('div');
+      overlay.id = 'cpcv-confirm-ia-overlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.78);display:flex;align-items:center;justify-content:center;padding:20px;z-index:99999';
+
+      var modal = document.createElement('div');
+      modal.style.cssText = 'background:var(--bg2,#141413);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:32px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.5);font-family:\'DM Sans\',sans-serif';
+      modal.innerHTML =
+        '<div style="font-size:32px;margin-bottom:16px">&#129302;</div>'
+        + '<div style="font-family:\'Instrument Serif\',serif;font-size:22px;color:var(--text,#f0ede8);margin-bottom:10px;letter-spacing:-.02em">Confirmar geração</div>'
+        + '<div style="font-size:13px;color:var(--text-muted,#8a8880);line-height:1.6;margin-bottom:12px">' + descTxt + '</div>'
+        + '<div style="font-size:12px;color:var(--text-faint,#4a4845);margin-bottom:24px;padding:10px 14px;background:var(--bg3,#1c1c1a);border-radius:8px;border:1px solid rgba(255,255,255,.07);line-height:1.6">'
+          + saldoHTML + multInfo
+        + '</div>'
+        + '<div style="display:flex;gap:8px">'
+          + '<button id="cpcv-confirm-ok" style="flex:1;height:44px;background:var(--accent,#c9a96e);color:#0c0c0b;border:none;border-radius:10px;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:500;cursor:pointer">Confirmar</button>'
+          + '<button id="cpcv-confirm-cancel" style="height:44px;padding:0 20px;background:none;border:1px solid rgba(255,255,255,.1);border-radius:10px;font-family:\'DM Sans\',sans-serif;font-size:13px;color:var(--text-muted,#8a8880);cursor:pointer">Cancelar</button>'
+        + '</div>';
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+
+      document.getElementById('cpcv-confirm-ok').onclick = function() { overlay.remove(); if (callback) callback(); };
+      document.getElementById('cpcv-confirm-cancel').onclick = function() { overlay.remove(); };
+      overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
     }
   };
 
