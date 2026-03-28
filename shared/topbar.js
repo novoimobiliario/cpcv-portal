@@ -184,7 +184,39 @@ _fecharModal: function() {
 },
 
 _onAvatar: function() {
-  window.location.href = 'https://cpcv.pt/portal.html#perfil';
+  CPCVTopbar.navegarCom('https://cpcv.pt/perfil.html');
+},
+
+// ── Navegação com overlay de loading ────────────────────────────────────
+// Uso: CPCVTopbar.navegarCom('https://cpcv.pt/perfil.html')
+navegarCom: function(url) {
+  var existing = document.getElementById('cpcv-nav-overlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'cpcv-nav-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(12,12,11,0.96);font-family:\'DM Sans\',sans-serif';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:20px';
+  box.innerHTML = ''
+    + '<img src="https://cpcv.pt/logo-cpcv.png" style="width:36px;height:36px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.85" alt="CPCV">'
+    + '<div style="display:flex;gap:6px;align-items:center">'
+    +   '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent,#c9a96e);animation:cpcv-bounce 0.9s infinite"></span>'
+    +   '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent,#c9a96e);animation:cpcv-bounce 0.9s 0.15s infinite"></span>'
+    +   '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent,#c9a96e);animation:cpcv-bounce 0.9s 0.3s infinite"></span>'
+    + '</div>';
+
+  if (!document.getElementById('cpcv-gerando-style')) {
+    var style = document.createElement('style');
+    style.id = 'cpcv-gerando-style';
+    style.textContent = '@keyframes cpcv-bounce{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-5px);opacity:1}}';
+    document.head.appendChild(style);
+  }
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  setTimeout(function() { window.location.href = url; }, 400);
 },
 
 init: function(opts) {
