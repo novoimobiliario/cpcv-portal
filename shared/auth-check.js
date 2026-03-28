@@ -98,15 +98,23 @@
     // Esconder o body ate confirmar sessao
     document.body.style.visibility = 'hidden';
     document.body.appendChild(el);
+    // Registar quando o loading começou
+    window._cpcvLoadingStart = Date.now();
   }
 
-  // ── Remover loading screen ───────────────────────────────────────────
+  // ── Remover loading screen (mínimo 600ms visível) ────────────────────
   function removeLoading() {
     var el = document.getElementById('cpcv-auth-loading');
     if (!el) return;
-    document.body.style.visibility = '';
-    el.classList.add('fade-out');
-    setTimeout(function() { el.parentNode && el.parentNode.removeChild(el); }, 450);
+    var elapsed = Date.now() - (window._cpcvLoadingStart || 0);
+    var restante = Math.max(0, 600 - elapsed);
+    setTimeout(function() {
+      var el2 = document.getElementById('cpcv-auth-loading');
+      if (!el2) return;
+      document.body.style.visibility = '';
+      el2.classList.add('fade-out');
+      setTimeout(function() { el2.parentNode && el2.parentNode.removeChild(el2); }, 450);
+    }, restante);
   }
 
   // ── Disparar evento cpcv:pronto com delay para garantir listeners ────
