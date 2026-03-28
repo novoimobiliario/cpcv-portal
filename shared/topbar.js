@@ -351,6 +351,99 @@ _abrirConfirmModal: function(creditosEst, creditosActuais, ilimitado, mult, toke
   document.getElementById('cpcv-confirm-ok').onclick = function() { overlay.remove(); if (callback) callback(); };
   document.getElementById('cpcv-confirm-cancel').onclick = function() { overlay.remove(); };
   overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+},
+
+// ── Modal de geração IA — frases rotativas ───────────────────────────────
+// Uso: CPCVTopbar.mostrarGerandoIA()  → abre
+//      CPCVTopbar.fecharGerandoIA()   → fecha (chama no callback após receber resposta)
+mostrarGerandoIA: function() {
+  var existing = document.getElementById('cpcv-gerando-overlay');
+  if (existing) existing.remove();
+
+  var frases = [
+    'Há poucos anos, isto levaria horas de pesquisa e tentativa-erro.',
+    'Estás a usar tecnologia que a maioria dos consultores ainda não descobriu.',
+    'O que estás a criar agora seria impossível sem uma equipa inteira há 5 anos.',
+    'Cada detalhe que forneceste está a ser usado para personalizar a resposta.',
+    'A IA não substitui o teu conhecimento — amplifica-o.',
+    'Se correr mal, repetes. A IA não se importa — nem cobra horas extra.',
+    'Isto que estás a fazer em segundos, custava dias de trabalho manual.',
+    'Antes desta tecnologia, precisavas de um copywriter, um estratega e muita paciência.',
+    'O que a IA fez agora levaria a uma pessoa experiente pelo menos duas horas.',
+    'Há 3 anos, este nível de personalização era exclusivo de grandes empresas.',
+    'A IA não inventa — usa o que tu sabes para ir mais longe.',
+    'O resultado é tão bom quanto o contexto que forneceste. E tu forneceste bem.',
+    'Nenhuma IA sabe o que tu sabes sobre os teus clientes. Por isso o resultado é teu.',
+    'A tecnologia faz o trabalho pesado. A estratégia continua a ser tua.',
+    'Estás a fazer parte de uma mudança que a maioria ainda não percebeu.',
+    'Os melhores consultores de amanhã já estão a fazer isto hoje.',
+    'Ser pioneiro tem este sabor: avançar quando os outros ainda estão a hesitar.',
+    'O teu cliente não sabe o que aconteceu aqui. Mas vai sentir a diferença.',
+    'A trabalhar mais depressa do que qualquer estagiário que já tiveste.'
+  ];
+
+  var overlay = document.createElement('div');
+  overlay.id = 'cpcv-gerando-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(12,12,11,0.92);backdrop-filter:blur(6px);font-family:\'DM Sans\',sans-serif';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'max-width:440px;width:90%;text-align:center;padding:48px 36px;background:var(--bg2,#141413);border:1px solid rgba(255,255,255,0.07);border-radius:20px;display:flex;flex-direction:column;align-items:center;gap:28px';
+
+  box.innerHTML = ''
+    + '<img src="https://cpcv.pt/logo-cpcv.png" style="width:40px;height:40px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.9" alt="CPCV">'
+    + '<div style="display:flex;gap:6px;align-items:center;justify-content:center">'
+    +   '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent,#c9a96e);animation:cpcv-bounce 0.9s infinite"></span>'
+    +   '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent,#c9a96e);animation:cpcv-bounce 0.9s 0.15s infinite"></span>'
+    +   '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent,#c9a96e);animation:cpcv-bounce 0.9s 0.3s infinite"></span>'
+    + '</div>'
+    + '<p id="cpcv-gerando-frase" style="font-size:15px;color:var(--text,#f0ede8);line-height:1.7;min-height:52px;letter-spacing:-0.01em;transition:opacity 0.4s"></p>'
+    + '<span style="font-size:11px;color:var(--text-faint,#4a4845);font-family:\'DM Mono\',monospace;letter-spacing:.06em;text-transform:uppercase">A gerar o teu plano…</span>';
+
+  // CSS da animação dos dots
+  if (!document.getElementById('cpcv-gerando-style')) {
+    var style = document.createElement('style');
+    style.id = 'cpcv-gerando-style';
+    style.textContent = '@keyframes cpcv-bounce{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-5px);opacity:1}}';
+    document.head.appendChild(style);
+  }
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  // Rodar frases com fade
+  var idx = Math.floor(Math.random() * frases.length);
+  var el = document.getElementById('cpcv-gerando-frase');
+  if (el) el.textContent = frases[idx];
+
+  var interval = setInterval(function() {
+    var el = document.getElementById('cpcv-gerando-frase');
+    if (!el) { clearInterval(interval); return; }
+    el.style.opacity = '0';
+    setTimeout(function() {
+      idx = (idx + 1) % frases.length;
+      var el2 = document.getElementById('cpcv-gerando-frase');
+      if (el2) { el2.textContent = frases[idx]; el2.style.opacity = '1'; }
+    }, 400);
+  }, 3200);
+
+  overlay._interval = interval;
+  overlay._start = Date.now();
+},
+
+fecharGerandoIA: function() {
+  var overlay = document.getElementById('cpcv-gerando-overlay');
+  if (!overlay) return;
+  // Garantir mínimo de 5 segundos
+  var elapsed = Date.now() - (overlay._start || 0);
+  var restante = Math.max(0, 5000 - elapsed);
+  setTimeout(function() {
+    var el = document.getElementById('cpcv-gerando-overlay');
+    if (!el) return;
+    if (el._interval) clearInterval(el._interval);
+    el.style.transition = 'opacity 0.3s';
+    el.style.opacity = '0';
+    setTimeout(function() { if (el.parentNode) el.remove(); }, 300);
+  }, restante);
 }
 };
 })();
