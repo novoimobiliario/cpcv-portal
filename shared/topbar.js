@@ -355,9 +355,7 @@ _abrirConfirmModal: function(creditosEst, creditosActuais, ilimitado, mult, toke
     ? '<span style="color:var(--success,#4a9e6b)">&#10003; Sem consumo de créditos</span>'
     : 'Saldo: <strong>' + creditosActuais.toLocaleString('pt-PT') + '</strong> cr. &rarr; após: <strong>' + Math.max(0, creditosActuais - creditosEst).toLocaleString('pt-PT') + '</strong> cr.';
 
-  var multInfo = mult !== 1
-    ? '<div style="font-size:11px;color:var(--text-faint,#4a4845);margin-top:4px">Multiplicador activo: ' + mult + '× (' + tokensPorCr + ' tokens/cr)</div>'
-    : '';
+  var multInfo = '';
 
   var overlay = document.createElement('div');
   overlay.id = 'cpcv-confirm-ia-overlay';
