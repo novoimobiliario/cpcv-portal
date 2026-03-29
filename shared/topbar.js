@@ -380,7 +380,7 @@ _abrirConfirmModal: function(creditosEst, creditosActuais, ilimitado, mult, toke
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
 
-  document.getElementById('cpcv-confirm-ok').onclick = function() { overlay.remove(); if (callback) callback(); };
+  document.getElementById('cpcv-confirm-ok').onclick = function() { window._cpvcCreditosEstimados = ilimitado ? 0 : creditosEst; overlay.remove(); if (callback) callback(); };
   document.getElementById('cpcv-confirm-cancel').onclick = function() { overlay.remove(); };
   overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 },
