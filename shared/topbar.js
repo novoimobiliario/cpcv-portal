@@ -53,7 +53,30 @@ _onComprar: function() {
   CPCVTopbar._injectPainel();
 },
 
-_injectPainel: function() {
+_fallbackPacotes: function() {
+  return [
+    {offer:'mn6j3971',cr:'100 cr.',preco:'8\u20ac',precoPorCr:'0,08\u20ac/cr'},
+    {offer:'mn6j4jwg',cr:'300 cr.',preco:'13\u20ac',precoPorCr:'0,04\u20ac/cr'},
+    {offer:'mn6j4u4l',cr:'500 cr.',preco:'20\u20ac',precoPorCr:'0,04\u20ac/cr'},
+    {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34\u20ac',precoPorCr:'0,03\u20ac/cr',popular:true},
+  ];
+},
+
+_carregarPacotes: function(callback) {
+  var sb = window.CPCV && window.CPCV.sb;
+  if (!sb) { callback(CPCVTopbar._fallbackPacotes()); return; }
+  sb.from('pacotes_creditos').select('*').eq('ativo',true).order('ordem').then(function(res) {
+    var offerMap = {'100':'mn6j3971','300':'mn6j4jwg','500':'mn6j4u4l','1000':'mn6j5cjt'};
+    var pacotes = (res.data||[]).map(function(p) {
+      var ppc = p.creditos > 0 ? (p.preco/p.creditos).toFixed(2).replace('.',',')+'\u20ac/cr' : null;
+      return {offer:offerMap[String(p.creditos)]||p.id,cr:p.creditos+' cr.',preco:p.preco+'\u20ac',precoPorCr:ppc,popular:!!p.popular};
+    });
+    callback(pacotes.length ? pacotes : CPCVTopbar._fallbackPacotes());
+  });
+},
+
+_ensureCheckoutInfra: function() {
+  if (document.getElementById('cpcv-modal-checkout')) return;
   var s = document.createElement('style');
   s.textContent = '#cpcv-painel-creditos{background:var(--bg2,#141413);border-bottom:1px solid var(--border,rgba(255,255,255,.1));padding:16px 28px;}'
     + '#cpcv-modal-checkout{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;}'
@@ -67,36 +90,84 @@ _injectPainel: function() {
     + '.cpcv-pacote-btn{margin-top:4px;background:var(--accent,#c9a96e);color:#0c0c0b;font-size:11px;font-weight:500;padding:5px 10px;border-radius:5px;}'
     + '.cpcv-popular-badge{position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--accent,#c9a96e);color:#0c0c0b;font-size:8px;font-weight:700;padding:2px 8px;border-radius:3px;white-space:nowrap;letter-spacing:.04em;}';
   document.head.appendChild(s);
+  var modal = document.createElement('div');
+  modal.id = 'cpcv-modal-checkout';
+  modal.innerHTML = '<div class="cpcv-modal-box">'
+    + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">'
+    + '<div><div style="font-size:15px;font-weight:500;color:var(--text,#f0ede8);margin-bottom:4px">Continuar para pagamento</div>'
+    + '<div style="font-size:12px;color:var(--text-muted,#8a8880)" id="cpcv-modal-pacote"></div></div>'
+    + '<button onclick="CPCVTopbar._fecharModal()" style="background:none;border:none;color:var(--text-faint,#4a4845);cursor:pointer;font-size:20px;padding:0;line-height:1;margin-left:16px">&times;</button>'
+    + '</div>'
+    + '<div style="background:rgba(201,169,110,.08);border:1px solid rgba(201,169,110,.25);border-radius:10px;padding:14px 16px;margin-bottom:20px">'
+    + '<div style="display:flex;gap:10px;align-items:flex-start">'
+    + '<div style="font-size:16px;flex-shrink:0">&#9888;&#65039;</div>'
+    + '<div><div style="font-size:12px;font-weight:600;color:var(--accent,#c9a96e);letter-spacing:.02em;margin-bottom:6px;text-transform:uppercase">Aten&ccedil;&atilde;o &mdash; l&ecirc; antes de continuar</div>'
+    + '<div style="font-size:13px;color:var(--text,#f0ede8);line-height:1.6">Vais ser reencaminhado para o nosso parceiro de pagamentos. Para que os cr&eacute;ditos sejam atribu&iacute;dos automaticamente &agrave; tua conta, <strong>tens de utilizar exactamente este email no checkout:</strong></div>'
+    + '<div style="margin-top:10px;display:flex;align-items:center;gap:8px">'
+    + '<div style="flex:1;background:var(--bg,#0c0c0b);border:1px solid var(--border,rgba(255,255,255,.1));border-radius:6px;padding:8px 12px;font-family:\'DM Mono\',monospace;font-size:13px;color:var(--accent,#c9a96e);text-align:center" id="cpcv-modal-email">&mdash;</div>'
+    + '<button onclick="var e=document.getElementById(\'cpcv-modal-email\');navigator.clipboard.writeText(e.textContent);this.textContent=\'✓\';setTimeout(()=>this.textContent=\'Copiar\',2000)" style="height:36px;padding:0 12px;background:var(--bg3,#1c1c1a);border:1px solid var(--border,rgba(255,255,255,.1));border-radius:6px;color:var(--text-muted,#8a8880);font-family:\'DM Sans\',sans-serif;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0">Copiar</button>'
+    + '</div>'
+    + '<div style="margin-top:8px;font-size:12px;color:var(--text-muted,#8a8880);line-height:1.5">Se utilizares um email diferente, os cr&eacute;ditos n&atilde;o ser&atilde;o atribu&iacute;dos automaticamente e ter&aacute;s de contactar o suporte.</div>'
+    + '</div></div></div>'
+    + '<div style="display:flex;gap:10px">'
+    + '<a id="cpcv-modal-link" href="#" target="_blank" onclick="CPCVTopbar._fecharModal()" style="flex:1;height:44px;background:var(--accent,#c9a96e);color:#0c0c0b;border:none;border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center">Continuar para o pagamento &rarr;</a>'
+    + '<button onclick="CPCVTopbar._fecharModal()" style="height:44px;padding:0 20px;background:none;border:1px solid var(--border,rgba(255,255,255,.1));border-radius:8px;color:var(--text-muted,#8a8880);font-family:\'DM Sans\',sans-serif;font-size:14px;cursor:pointer">Cancelar</button>'
+    + '</div></div>';
+  modal.addEventListener('click', function(e) { if (e.target === modal) CPCVTopbar._fecharModal(); });
+  document.body.appendChild(modal);
+},
 
-  var sb = window.CPCV && window.CPCV.sb;
-  if (sb) {
-    sb.from('pacotes_creditos').select('*').eq('ativo', true).order('ordem').then(function(res) {
-      var offerMap = {'100':'mn6j3971','300':'mn6j4jwg','500':'mn6j4u4l','1000':'mn6j5cjt'};
-      var pacotes = (res.data || []).map(function(p) {
-        var ppc = p.creditos > 0 ? (p.preco / p.creditos).toFixed(2).replace('.',',') : null;
-        return {offer: offerMap[String(p.creditos)] || p.id, cr: p.creditos+' cr.', preco: p.preco+'€', precoPorCr: ppc ? ppc+'€/cr' : null, popular: !!p.popular};
-      });
-      if (!pacotes.length) pacotes = [
-        {offer:'mn6j3971',cr:'100 cr.',preco:'8€',precoPorCr:'0,08€/cr'},
-        {offer:'mn6j4jwg',cr:'300 cr.',preco:'13€',precoPorCr:'0,04€/cr'},
-        {offer:'mn6j4u4l',cr:'500 cr.',preco:'20€',precoPorCr:'0,04€/cr'},
-        {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34€',precoPorCr:'0,03€/cr',popular:true},
-      ];
-      CPCVTopbar._renderPacotes(pacotes);
-      var p = document.getElementById('cpcv-painel-creditos');
-      if (p) p.style.display = 'block';
-    });
-  } else {
-    var pacotes = [
-      {offer:'mn6j3971',cr:'100 cr.',preco:'8€',precoPorCr:'0,08€/cr'},
-      {offer:'mn6j4jwg',cr:'300 cr.',preco:'13€',precoPorCr:'0,04€/cr'},
-      {offer:'mn6j4u4l',cr:'500 cr.',preco:'20€',precoPorCr:'0,04€/cr'},
-      {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34€',precoPorCr:'0,03€/cr',popular:true},
-    ];
+_injectPainel: function() {
+  CPCVTopbar._ensureCheckoutInfra();
+  CPCVTopbar._carregarPacotes(function(pacotes) {
     CPCVTopbar._renderPacotes(pacotes);
     var p = document.getElementById('cpcv-painel-creditos');
     if (p) p.style.display = 'block';
-  }
+  });
+},
+
+_mostrarSemCreditos: function(creditosActuais, creditosEst) {
+  var existing = document.getElementById('cpcv-sem-creditos-overlay');
+  if (existing) existing.remove();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+  CPCVTopbar._ensureCheckoutInfra();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'cpcv-sem-creditos-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:20px;z-index:99998';
+
+  var modal = document.createElement('div');
+  modal.style.cssText = 'background:var(--bg2,#141413);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:32px;width:100%;max-width:520px;box-shadow:0 24px 64px rgba(0,0,0,.5);font-family:\'DM Sans\',sans-serif';
+  modal.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">'
+    + '<div style="font-size:28px">\uD83E\uDE99</div>'
+    + '<button onclick="document.getElementById(\'cpcv-sem-creditos-overlay\').remove()" style="background:none;border:none;color:var(--text-faint,#4a4845);cursor:pointer;font-size:20px;padding:0;line-height:1">&times;</button>'
+    + '</div>'
+    + '<div style="font-family:\'Instrument Serif\',serif;font-size:22px;color:var(--text,#f0ede8);margin-bottom:12px;letter-spacing:-.02em">Cr&eacute;ditos insuficientes</div>'
+    + '<div style="font-size:14px;color:var(--text-muted,#8a8880);line-height:1.7;margin-bottom:24px">'
+    + 'Tens <strong style="color:var(--text,#f0ede8)">' + creditosActuais + ' cr&eacute;dito' + (creditosActuais !== 1 ? 's' : '') + '</strong> e precisas de pelo menos <strong style="color:var(--text,#f0ede8)">' + creditosEst + '</strong> para realizar esta ac&ccedil;&atilde;o. Escolhe abaixo um dos pacotes e continua a evoluir com o Portal CPCV.'
+    + '</div>'
+    + '<div id="cpcv-sc-cards" style="display:flex;gap:10px;flex-wrap:wrap">'
+    + '<span style="font-size:12px;color:var(--text-faint,#4a4845)">A carregar...</span>'
+    + '</div>';
+
+  overlay.appendChild(modal);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+
+  CPCVTopbar._carregarPacotes(function(pacotes) {
+    var cards = pacotes.map(function(p) {
+      return '<div class="cpcv-pacote' + (p.popular?' popular':'') + '" onclick="document.getElementById(\'cpcv-sem-creditos-overlay\').remove();CPCVTopbar._abrirModal(\'' + p.offer + '\',\'' + p.cr + ' \u2014 ' + p.preco + '\')">'
+        + (p.popular ? '<div class="cpcv-popular-badge">POPULAR</div>' : '')
+        + '<div class="cpcv-pacote-cr">' + p.cr + '</div>'
+        + '<div class="cpcv-pacote-preco">' + p.preco + '</div>'
+        + (p.precoPorCr ? '<div style="font-size:9px;color:var(--text-faint,#4a4845);font-family:\'DM Mono\',monospace;letter-spacing:.02em">' + p.precoPorCr + '</div>' : '')
+        + '<div class="cpcv-pacote-btn">Comprar</div>'
+        + '</div>';
+    }).join('');
+    var el = document.getElementById('cpcv-sc-cards');
+    if (el) el.innerHTML = cards;
+  });
 },
 
 _renderPacotes: function(pacotes) {
@@ -332,8 +403,7 @@ pedirConfirmacao: async function(textoPrompt, callback, opcoes) {
     var creditosEst = Math.ceil((tokensInput + tokensOut) / tokensPorCr);
 
     if (!ilimitado && creditosActuais < creditosEst) {
-      if (msgEl) { msgEl.style.color = 'var(--danger, #e06060)'; msgEl.textContent = 'Saldo insuficiente — precisas de ~' + creditosEst + ' cr. e tens ' + creditosActuais + '.'; }
-      CPCVTopbar._onComprar();
+      CPCVTopbar._mostrarSemCreditos(creditosActuais, creditosEst);
       return;
     }
 
