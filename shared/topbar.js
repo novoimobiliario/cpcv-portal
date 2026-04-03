@@ -73,13 +73,14 @@ _injectPainel: function() {
     sb.from('pacotes_creditos').select('*').eq('ativo', true).order('ordem').then(function(res) {
       var offerMap = {'100':'mn6j3971','300':'mn6j4jwg','500':'mn6j4u4l','1000':'mn6j5cjt'};
       var pacotes = (res.data || []).map(function(p) {
-        return {offer: offerMap[String(p.creditos)] || p.id, cr: p.creditos+' cr.', preco: p.preco+'€', popular: !!p.popular};
+        var ppc = p.creditos > 0 ? (p.preco / p.creditos * 100).toFixed(1).replace(/\.0$/,'') : null;
+        return {offer: offerMap[String(p.creditos)] || p.id, cr: p.creditos+' cr.', preco: p.preco+'€', precoPorCr: ppc ? ppc+'ct/cr' : null, popular: !!p.popular};
       });
       if (!pacotes.length) pacotes = [
-        {offer:'mn6j3971',cr:'100 cr.',preco:'8€'},
-        {offer:'mn6j4jwg',cr:'300 cr.',preco:'13€'},
-        {offer:'mn6j4u4l',cr:'500 cr.',preco:'20€'},
-        {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34€',popular:true},
+        {offer:'mn6j3971',cr:'100 cr.',preco:'8€',precoPorCr:'8ct/cr'},
+        {offer:'mn6j4jwg',cr:'300 cr.',preco:'13€',precoPorCr:'4.3ct/cr'},
+        {offer:'mn6j4u4l',cr:'500 cr.',preco:'20€',precoPorCr:'4ct/cr'},
+        {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34€',precoPorCr:'3.4ct/cr',popular:true},
       ];
       CPCVTopbar._renderPacotes(pacotes);
       var p = document.getElementById('cpcv-painel-creditos');
@@ -87,10 +88,10 @@ _injectPainel: function() {
     });
   } else {
     var pacotes = [
-      {offer:'mn6j3971',cr:'100 cr.',preco:'8€'},
-      {offer:'mn6j4jwg',cr:'300 cr.',preco:'13€'},
-      {offer:'mn6j4u4l',cr:'500 cr.',preco:'20€'},
-      {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34€',popular:true},
+      {offer:'mn6j3971',cr:'100 cr.',preco:'8€',precoPorCr:'8ct/cr'},
+      {offer:'mn6j4jwg',cr:'300 cr.',preco:'13€',precoPorCr:'4.3ct/cr'},
+      {offer:'mn6j4u4l',cr:'500 cr.',preco:'20€',precoPorCr:'4ct/cr'},
+      {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34€',precoPorCr:'3.4ct/cr',popular:true},
     ];
     CPCVTopbar._renderPacotes(pacotes);
     var p = document.getElementById('cpcv-painel-creditos');
@@ -104,6 +105,7 @@ _renderPacotes: function(pacotes) {
       + (p.popular ? '<div class="cpcv-popular-badge">POPULAR</div>' : '')
       + '<div class="cpcv-pacote-cr">' + p.cr + '</div>'
       + '<div class="cpcv-pacote-preco">' + p.preco + '</div>'
+      + (p.precoPorCr ? '<div style="font-size:9px;color:var(--text-faint,#4a4845);font-family:\'DM Mono\',monospace;letter-spacing:.02em">' + p.precoPorCr + '</div>' : '')
       + '<div class="cpcv-pacote-btn">Comprar</div>'
       + '</div>';
   }).join('');
@@ -331,6 +333,7 @@ pedirConfirmacao: async function(textoPrompt, callback, opcoes) {
 
     if (!ilimitado && creditosActuais < creditosEst) {
       if (msgEl) { msgEl.style.color = 'var(--danger, #e06060)'; msgEl.textContent = 'Saldo insuficiente — precisas de ~' + creditosEst + ' cr. e tens ' + creditosActuais + '.'; }
+      CPCVTopbar._onComprar();
       return;
     }
 
