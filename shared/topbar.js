@@ -73,14 +73,14 @@ _injectPainel: function() {
     sb.from('pacotes_creditos').select('*').eq('ativo', true).order('ordem').then(function(res) {
       var offerMap = {'100':'mn6j3971','300':'mn6j4jwg','500':'mn6j4u4l','1000':'mn6j5cjt'};
       var pacotes = (res.data || []).map(function(p) {
-        var ppc = p.creditos > 0 ? (p.preco / p.creditos * 100).toFixed(1).replace(/\.0$/,'') : null;
-        return {offer: offerMap[String(p.creditos)] || p.id, cr: p.creditos+' cr.', preco: p.preco+'€', precoPorCr: ppc ? ppc+'ct/cr' : null, popular: !!p.popular};
+        var ppc = p.creditos > 0 ? (p.preco / p.creditos).toFixed(2).replace('.',',') : null;
+        return {offer: offerMap[String(p.creditos)] || p.id, cr: p.creditos+' cr.', preco: p.preco+'€', precoPorCr: ppc ? ppc+'€/cr' : null, popular: !!p.popular};
       });
       if (!pacotes.length) pacotes = [
-        {offer:'mn6j3971',cr:'100 cr.',preco:'8€',precoPorCr:'8ct/cr'},
-        {offer:'mn6j4jwg',cr:'300 cr.',preco:'13€',precoPorCr:'4.3ct/cr'},
-        {offer:'mn6j4u4l',cr:'500 cr.',preco:'20€',precoPorCr:'4ct/cr'},
-        {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34€',precoPorCr:'3.4ct/cr',popular:true},
+        {offer:'mn6j3971',cr:'100 cr.',preco:'8€',precoPorCr:'0,08€/cr'},
+        {offer:'mn6j4jwg',cr:'300 cr.',preco:'13€',precoPorCr:'0,04€/cr'},
+        {offer:'mn6j4u4l',cr:'500 cr.',preco:'20€',precoPorCr:'0,04€/cr'},
+        {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34€',precoPorCr:'0,03€/cr',popular:true},
       ];
       CPCVTopbar._renderPacotes(pacotes);
       var p = document.getElementById('cpcv-painel-creditos');
@@ -88,10 +88,10 @@ _injectPainel: function() {
     });
   } else {
     var pacotes = [
-      {offer:'mn6j3971',cr:'100 cr.',preco:'8€',precoPorCr:'8ct/cr'},
-      {offer:'mn6j4jwg',cr:'300 cr.',preco:'13€',precoPorCr:'4.3ct/cr'},
-      {offer:'mn6j4u4l',cr:'500 cr.',preco:'20€',precoPorCr:'4ct/cr'},
-      {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34€',precoPorCr:'3.4ct/cr',popular:true},
+      {offer:'mn6j3971',cr:'100 cr.',preco:'8€',precoPorCr:'0,08€/cr'},
+      {offer:'mn6j4jwg',cr:'300 cr.',preco:'13€',precoPorCr:'0,04€/cr'},
+      {offer:'mn6j4u4l',cr:'500 cr.',preco:'20€',precoPorCr:'0,04€/cr'},
+      {offer:'mn6j5cjt',cr:'1000 cr.',preco:'34€',precoPorCr:'0,03€/cr',popular:true},
     ];
     CPCVTopbar._renderPacotes(pacotes);
     var p = document.getElementById('cpcv-painel-creditos');
