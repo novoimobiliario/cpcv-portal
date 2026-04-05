@@ -139,6 +139,15 @@
     window.CPCV = window.CPCV || {};
     window.CPCV.sb = sb;
     window.CPCV.CLAUDE_PROXY = SB_URL + '/functions/v1/claude-proxy';
+    window.CPCV.reloadCreditos = async function() {
+      var s = window.CPCV.sb;
+      var u = window.CPCV.currentUser;
+      if (!s || !u) return;
+      var res = await s.from('mentorados').select('creditos_ia,acesso_ia').eq('user_id', u.id).maybeSingle();
+      if (res.data && window.CPCVTopbar && typeof window.CPCVTopbar.setCreditos === 'function') {
+        window.CPCVTopbar.setCreditos(res.data.creditos_ia || 0, res.data.acesso_ia);
+      }
+    };
 
     sb.auth.getSession().then(function(result) {
       var session = result.data && result.data.session;
