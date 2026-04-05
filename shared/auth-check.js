@@ -138,6 +138,7 @@
     var sb = window.supabase.createClient(SB_URL, SB_KEY);
     window.CPCV = window.CPCV || {};
     window.CPCV.sb = sb;
+    window.CPCV.CLAUDE_PROXY = SB_URL + '/functions/v1/claude-proxy';
 
     sb.auth.getSession().then(function(result) {
       var session = result.data && result.data.session;
