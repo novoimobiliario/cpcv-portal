@@ -314,16 +314,20 @@ setCreditos: function(creditos, acessoIlimitado) {
   const btn  = document.getElementById('cpcv-tb-cred-btn');
   if (!wrap || !val) return;
   CPCVTopbar._ilimitado = !!acessoIlimitado;
+  wrap.style.display = 'flex';
   if (acessoIlimitado) {
-    // Modo "zen" — esconde completamente o bloco de créditos (sem attention tax)
-    wrap.style.display = 'none';
+    // Mostra "IA Ilimitada" estático (sem descer contador) — coerente com portal.html
     CPCVTopbar._creditos = null;
+    val.textContent = '♾ IA Ilimitada';
+    val.style.color = 'var(--ok, #4a9e6b)';
+    val.style.fontWeight = '600';
+    if (btn) btn.style.display = 'none';
   } else {
-    wrap.style.display = 'flex';
     const c = creditos || 0;
     CPCVTopbar._creditos = c;
     val.textContent = c.toLocaleString('pt-PT') + ' cr.';
     val.style.color = c > 500 ? 'var(--ok, #4a9e6b)' : c > 100 ? 'var(--accent, #c9a96e)' : '#e05c5c';
+    val.style.fontWeight = '';
     if (btn) btn.style.display = 'inline-block';
   }
 },
