@@ -313,13 +313,13 @@ setCreditos: function(creditos, acessoIlimitado) {
   const val  = document.getElementById('cpcv-tb-cred-val');
   const btn  = document.getElementById('cpcv-tb-cred-btn');
   if (!wrap || !val) return;
-  wrap.style.display = 'flex';
+  CPCVTopbar._ilimitado = !!acessoIlimitado;
   if (acessoIlimitado) {
+    // Modo "zen" — esconde completamente o bloco de créditos (sem attention tax)
+    wrap.style.display = 'none';
     CPCVTopbar._creditos = null;
-    val.textContent = 'Ilimitado';
-    val.style.color = 'var(--ok, #4a9e6b)';
-    if (btn) btn.style.display = 'none';
   } else {
+    wrap.style.display = 'flex';
     const c = creditos || 0;
     CPCVTopbar._creditos = c;
     val.textContent = c.toLocaleString('pt-PT') + ' cr.';
@@ -402,7 +402,14 @@ pedirConfirmacao: async function(textoPrompt, callback, opcoes) {
     var tokensInput = Math.ceil(textoPrompt.length / 3.5);
     var creditosEst = Math.ceil((tokensInput + tokensOut) / tokensPorCr);
 
-    if (!ilimitado && creditosActuais < creditosEst) {
+    // Modo "zen" — IA Ilimitada: skip modal totalmente, vai direto
+    if (ilimitado) {
+      window._cpvcCreditosEstimados = 0;
+      if (callback) callback();
+      return;
+    }
+
+    if (creditosActuais < creditosEst) {
       CPCVTopbar._mostrarSemCreditos(creditosActuais, creditosEst);
       return;
     }
@@ -547,6 +554,17 @@ fecharGerandoIA: function() {
     el.style.opacity = '0';
     setTimeout(function() { if (el.parentNode) el.remove(); }, 300);
   }, restante);
+},
+
+// ── Actualizar display de créditos após geração ──────────────────────────
+reloadCreditos: async function() {
+  try {
+    var sb = window.CPCV && window.CPCV.sb;
+    var user = window.CPCV && window.CPCV.currentUser;
+    if (!sb || !user) return;
+    var res = await sb.from('mentorados').select('creditos_ia,acesso_ia').eq('user_id', user.id).maybeSingle();
+    if (res.data) CPCVTopbar.setCreditos(res.data.creditos_ia || 0, !!res.data.acesso_ia);
+  } catch(e) { console.warn('reloadCreditos:', e.message); }
 }
 };
 })();
