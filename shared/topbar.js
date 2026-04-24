@@ -1,7 +1,7 @@
 /**
  * topbar.js — Topbar partilhada · Ecossistema CPCV
  * Repositório: github.com/novoimobiliario/cpcv-portal
- * Versão: 1.2 · Março 2026
+ * Versão: 1.3 · Abril 2026 — skip_confirmacao_ia opt-out
  *
  * Uso num exercício autónomo:
  * <div id="topbar-root"></div>
@@ -394,13 +394,14 @@ pedirConfirmacao: async function(textoPrompt, callback, opcoes) {
 
     var results = await Promise.all([
       sb.from('configuracoes').select('valor').eq('chave','multiplicador_creditos').maybeSingle(),
-      sb.from('mentorados').select('creditos_ia,acesso_ia').eq('user_id', user.id).maybeSingle()
+      sb.from('mentorados').select('creditos_ia,acesso_ia,skip_confirmacao_ia').eq('user_id', user.id).maybeSingle()
     ]);
 
     var mult = parseFloat(results[0].data && results[0].data.valor || '1') || 1;
     var tokensPorCr = Math.max(1, Math.round(100 / mult));
     var saldo = results[1].data || {};
     var ilimitado = !!saldo.acesso_ia;
+    var skipConfirm = !!saldo.skip_confirmacao_ia;
     var creditosActuais = saldo.creditos_ia || 0;
 
     var tokensInput = Math.ceil(textoPrompt.length / 3.5);
@@ -409,6 +410,17 @@ pedirConfirmacao: async function(textoPrompt, callback, opcoes) {
     // Modo "zen" — IA Ilimitada: skip modal totalmente, vai direto
     if (ilimitado) {
       window._cpvcCreditosEstimados = 0;
+      if (callback) callback();
+      return;
+    }
+
+    // Utilizador optou por "Não ver mais estes avisos"
+    if (skipConfirm) {
+      if (creditosActuais < creditosEst) {
+        CPCVTopbar._mostrarSemCreditos(creditosActuais, creditosEst);
+        return;
+      }
+      window._cpvcCreditosEstimados = creditosEst;
       if (callback) callback();
       return;
     }
@@ -451,9 +463,13 @@ _abrirConfirmModal: function(creditosEst, creditosActuais, ilimitado, mult, toke
     '<div style="font-size:32px;margin-bottom:16px">&#129302;</div>'
     + '<div style="font-family:\'Instrument Serif\',serif;font-size:22px;color:var(--text,#f0ede8);margin-bottom:10px;letter-spacing:-.02em">Confirmar geração</div>'
     + '<div style="font-size:13px;color:var(--text-muted,#8a8880);line-height:1.6;margin-bottom:12px">' + descTxt + '</div>'
-    + '<div style="font-size:12px;color:var(--text-faint,#4a4845);margin-bottom:24px;padding:10px 14px;background:var(--bg3,#1c1c1a);border-radius:8px;border:1px solid rgba(255,255,255,.07);line-height:1.6">'
+    + '<div style="font-size:12px;color:var(--text-faint,#4a4845);margin-bottom:18px;padding:10px 14px;background:var(--bg3,#1c1c1a);border-radius:8px;border:1px solid rgba(255,255,255,.07);line-height:1.6">'
       + saldoHTML + multInfo
     + '</div>'
+    + '<label id="cpcv-confirm-skip-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:18px;cursor:pointer;user-select:none;font-size:12px;color:var(--text-faint,#4a4845)">'
+      + '<input type="checkbox" id="cpcv-confirm-skip" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent,#c9a96e)">'
+      + '<span>Não ver mais estes avisos <span style="opacity:.6">(podes reactivar no perfil)</span></span>'
+    + '</label>'
     + '<div style="display:flex;gap:8px">'
       + '<button id="cpcv-confirm-ok" style="flex:1;height:44px;background:var(--accent,#c9a96e);color:#0c0c0b;border:none;border-radius:10px;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:500;cursor:pointer">Confirmar</button>'
       + '<button id="cpcv-confirm-cancel" style="height:44px;padding:0 20px;background:none;border:1px solid rgba(255,255,255,.1);border-radius:10px;font-family:\'DM Sans\',sans-serif;font-size:13px;color:var(--text-muted,#8a8880);cursor:pointer">Cancelar</button>'
@@ -462,7 +478,19 @@ _abrirConfirmModal: function(creditosEst, creditosActuais, ilimitado, mult, toke
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
 
-  document.getElementById('cpcv-confirm-ok').onclick = function() { window._cpvcCreditosEstimados = ilimitado ? 0 : creditosEst; overlay.remove(); if (callback) callback(); };
+  document.getElementById('cpcv-confirm-ok').onclick = async function() {
+    var skipCheck = document.getElementById('cpcv-confirm-skip');
+    if (skipCheck && skipCheck.checked) {
+      try {
+        var sb2 = window.CPCV && window.CPCV.sb;
+        var user2 = window.CPCV && window.CPCV.currentUser;
+        if (sb2 && user2) await sb2.from('mentorados').update({ skip_confirmacao_ia: true }).eq('user_id', user2.id);
+      } catch(e) { console.warn('Falha a guardar skip_confirmacao_ia:', e); }
+    }
+    window._cpvcCreditosEstimados = ilimitado ? 0 : creditosEst;
+    overlay.remove();
+    if (callback) callback();
+  };
   document.getElementById('cpcv-confirm-cancel').onclick = function() { overlay.remove(); };
   overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 },
