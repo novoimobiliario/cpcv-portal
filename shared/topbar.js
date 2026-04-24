@@ -1,7 +1,7 @@
 /**
  * topbar.js — Topbar partilhada · Ecossistema CPCV
  * Repositório: github.com/novoimobiliario/cpcv-portal
- * Versão: 1.3 · Abril 2026 — skip_confirmacao_ia opt-out
+ * Versão: 1.4 · Abril 2026 — lookup ferramentas_ia no modal de confirmação
  *
  * Uso num exercício autónomo:
  * <div id="topbar-root"></div>
@@ -385,6 +385,8 @@ mostrarBloqueio: function(tipo) {
 pedirConfirmacao: async function(textoPrompt, callback, opcoes) {
   var msgElId = opcoes && opcoes.msgElId;
   var tokensOut = (opcoes && opcoes.tokensOutputEstimado) || 1500;
+  var ferramenta = opcoes && opcoes.ferramenta;
+  var creditosOverride = opcoes && opcoes.creditosOverride; // numero explicito
   var msgEl = msgElId ? document.getElementById(msgElId) : null;
 
   try {
@@ -392,10 +394,15 @@ pedirConfirmacao: async function(textoPrompt, callback, opcoes) {
     var user = window.CPCV && window.CPCV.currentUser;
     if (!sb || !user) { if (callback) callback(); return; }
 
-    var results = await Promise.all([
+    // Queries paralelas: config + mentorado + lookup ferramenta (se fornecida)
+    var queries = [
       sb.from('configuracoes').select('valor').eq('chave','multiplicador_creditos').maybeSingle(),
       sb.from('mentorados').select('creditos_ia,acesso_ia,skip_confirmacao_ia').eq('user_id', user.id).maybeSingle()
-    ]);
+    ];
+    if (ferramenta) {
+      queries.push(sb.from('ferramentas_ia').select('creditos_fixo').eq('ferramenta', ferramenta).maybeSingle());
+    }
+    var results = await Promise.all(queries);
 
     var mult = parseFloat(results[0].data && results[0].data.valor || '1') || 1;
     var tokensPorCr = Math.max(1, Math.round(100 / mult));
@@ -404,8 +411,16 @@ pedirConfirmacao: async function(textoPrompt, callback, opcoes) {
     var skipConfirm = !!saldo.skip_confirmacao_ia;
     var creditosActuais = saldo.creditos_ia || 0;
 
-    var tokensInput = Math.ceil(textoPrompt.length / 3.5);
-    var creditosEst = Math.ceil((tokensInput + tokensOut) / tokensPorCr);
+    // Prioridade de estimativa no modal: override > ferramentas_ia.creditos_fixo > tokens
+    var creditosEst;
+    if (typeof creditosOverride === 'number' && creditosOverride > 0) {
+      creditosEst = creditosOverride;
+    } else if (results[2] && results[2].data && results[2].data.creditos_fixo !== null && results[2].data.creditos_fixo !== undefined) {
+      creditosEst = results[2].data.creditos_fixo;
+    } else {
+      var tokensInput = Math.ceil(textoPrompt.length / 3.5);
+      creditosEst = Math.ceil((tokensInput + tokensOut) / tokensPorCr);
+    }
 
     // Modo "zen" — IA Ilimitada: skip modal totalmente, vai direto
     if (ilimitado) {
@@ -434,7 +449,7 @@ pedirConfirmacao: async function(textoPrompt, callback, opcoes) {
 
   } catch(e) {
     var tokensInput2 = Math.ceil(textoPrompt.length / 3.5);
-    var creditosEst2 = Math.ceil((tokensInput2 + tokensOut) / 100);
+    var creditosEst2 = (typeof creditosOverride === 'number' && creditosOverride > 0) ? creditosOverride : Math.ceil((tokensInput2 + tokensOut) / 100);
     CPCVTopbar._abrirConfirmModal(creditosEst2, CPCVTopbar._creditos || 0, false, 1, 100, callback);
   }
 },
