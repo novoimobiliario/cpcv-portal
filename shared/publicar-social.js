@@ -219,7 +219,8 @@
 
     _state = {
       texto: payload.texto,
-      media_url: payload.media_url || null,
+      media_url: payload.media_url || null,         // FB · LinkedIn (default)
+      media_url_ig: payload.media_url_ig || null,   // IG (override · 1080x1350 ou similar)
       primeiro_comentario: payload.primeiro_comentario || null,
       content_studio_id: payload.content_studio_id || null,
       plataformas: payload.plataformas && payload.plataformas.length ? payload.plataformas : ['linkedin', 'meta'],
@@ -467,6 +468,7 @@
       const body = {
         texto: _state.texto,
         media_url: _state.media_url || undefined,
+        media_url_ig: _state.media_url_ig || undefined,  // IG-specific URL (cropped · opcional)
         media_tipo: _state.media_url ? 'imagem' : undefined,
         primeiro_comentario: (_state.sel_comment && _state.primeiro_comentario) ? _state.primeiro_comentario : undefined,
         plataformas,
