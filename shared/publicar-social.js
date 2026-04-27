@@ -36,9 +36,14 @@
   let _quota = null;
   let _state = null;
 
-  // Admins têm sempre acesso "live" para screenshots/demos do App Review
+  // Override de status efectivo:
+  //   1. Admins têm sempre acesso "live" (para demos do App Review)
+  //   2. Se o user já tem token Meta ligado, passou pelo OAuth com sucesso
+  //      → não faz sentido apresentar como "em aprovação"
   function _statusEfectivo() {
     if (_mentorado && _mentorado.role === 'admin') return 'live';
+    const temFb = _tokens.some(t => t.plataforma === 'facebook' && t.esta_ativo);
+    if (temFb) return 'live';
     return _metaAppStatus;
   }
 
