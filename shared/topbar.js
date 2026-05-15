@@ -90,6 +90,64 @@ function _converterHeic(f) {
 // Expor para handlers que queiram chamar explicitamente (ex.: perfil.html)
 window.CPCVHeic = { ehHeic: _ehHeicFile, converter: _converterHeic };
 
+// ════════════════════════════════════════════════════════════════════════
+// LOGO DA AGÊNCIA · 2 variantes (escuro/claro)
+// ────────────────────────────────────────────────────────────────────────
+// A preferência fica em localStorage e é partilhada por todos os módulos.
+// Quando muda, emite-se `cpcv:logo-variante-mudou` para os módulos
+// re-renderizarem. Toggle UI auto-refresca via [data-logo-toggle].
+// ════════════════════════════════════════════════════════════════════════
+window.CPCVLogos = {
+  LS_KEY: 'cpcv_logo_variante',
+  getVariante: function() {
+    try { return localStorage.getItem(this.LS_KEY) || 'escuro'; } catch(e) { return 'escuro'; }
+  },
+  setVariante: function(v) {
+    if (v !== 'escuro' && v !== 'claro') return;
+    try { localStorage.setItem(this.LS_KEY, v); } catch(e) {}
+    this._refreshTogglesNaPage();
+    document.dispatchEvent(new CustomEvent('cpcv:logo-variante-mudou', { detail: { variante: v } }));
+  },
+  // Escolhe URL apropriado. Se user só tem um logo, devolve esse (independente da variante).
+  escolher: function(mentorado) {
+    if (!mentorado) return null;
+    var escuro = mentorado.logo_url || null;
+    var claro  = mentorado.logo_url_claro || null;
+    if (!escuro && !claro) return null;
+    if (!escuro) return claro;
+    if (!claro) return escuro;
+    return this.getVariante() === 'claro' ? claro : escuro;
+  },
+  // Devolve HTML do toggle pill. String vazia se o user só tem um logo.
+  toggleHTML: function(mentorado) {
+    if (!mentorado || !mentorado.logo_url || !mentorado.logo_url_claro) return '';
+    var v = this.getVariante();
+    var btn = function(val, label) {
+      var on = (v === val);
+      return '<button type="button" data-logo-variante="' + val + '" '
+        + 'onclick="CPCVLogos.setVariante(\'' + val + '\')" '
+        + 'style="padding:3px 10px;border-radius:14px;border:none;background:' + (on ? '#c9a96e' : 'transparent') + ';'
+        + 'color:' + (on ? '#0c0c0b' : '#a8a5a0') + ';cursor:pointer;font-family:inherit;font-size:10px;font-weight:500;letter-spacing:.02em">'
+        + label + '</button>';
+    };
+    return '<span data-logo-toggle style="display:inline-flex;align-items:center;gap:3px;padding:2px;background:rgba(255,255,255,.04);'
+      + 'border:1px solid rgba(255,255,255,.08);border-radius:20px;font-family:DM Sans,sans-serif;font-size:10px;vertical-align:middle">'
+      + '<span style="padding:0 6px 0 8px;color:#8a8880;font-size:9px;text-transform:uppercase;letter-spacing:.08em">Logo</span>'
+      + btn('escuro', 'Escuro')
+      + btn('claro', 'Claro')
+      + '</span>';
+  },
+  // Re-renderiza visualmente os toggles já no DOM (highlight muda ao clicar)
+  _refreshTogglesNaPage: function() {
+    var v = this.getVariante();
+    document.querySelectorAll('[data-logo-toggle] [data-logo-variante]').forEach(function(b) {
+      var on = (b.getAttribute('data-logo-variante') === v);
+      b.style.background = on ? '#c9a96e' : 'transparent';
+      b.style.color = on ? '#0c0c0b' : '#a8a5a0';
+    });
+  }
+};
+
 // Interceptor global do evento `change` — capture phase para correr ANTES
 // de qualquer handler inline ou registado pela página.
 var _heicProcessando = new WeakSet();
