@@ -23,8 +23,34 @@
 // de inputs com filtro restritivo, em runtime (cobre inputs criados por
 // template strings).
 // ════════════════════════════════════════════════════════════════════════
+function _ehHeicFile(f) {
+  if (!f) return false;
+  var t = (f.type || '').toLowerCase();
+  if (t === 'image/heic' || t === 'image/heif' || t === 'image/heic-sequence' || t === 'image/heif-sequence') return true;
+  return /\.(heic|heif)$/i.test(f.name || '');
+}
+// Carrega `heic-to` (libheif moderno · cobertura HEVC/AV1).
+// IIFE bundle expõe `window.HeicTo` COMO FUNÇÃO directa (com .isHeic property).
+var _heicToP = null;
+function _carregarHeicTo() {
+  if (_heicToP) return _heicToP;
+  _heicToP = new Promise(function(res, rej) {
+    if (typeof window.HeicTo === 'function') return res(window.HeicTo);
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/heic-to@1.1.14/dist/iife/heic-to.js';
+    s.async = true;
+    s.onload = function() {
+      if (typeof window.HeicTo === 'function') res(window.HeicTo);
+      else rej(new Error('heic-to indisponível após load'));
+    };
+    s.onerror = function() { rej(new Error('Falha a carregar heic-to')); };
+    document.head.appendChild(s);
+  });
+  return _heicToP;
+}
+// Fallback legacy · usado se heic-to também não der
 var _heic2anyP = null;
-function _heicCarregar() {
+function _carregarHeic2any() {
   if (_heic2anyP) return _heic2anyP;
   _heic2anyP = new Promise(function(res, rej) {
     if (window.heic2any) return res(window.heic2any);
@@ -32,25 +58,34 @@ function _heicCarregar() {
     s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
     s.async = true;
     s.onload = function() { window.heic2any ? res(window.heic2any) : rej(new Error('heic2any indisponível')); };
-    s.onerror = function() { rej(new Error('Falha a carregar conversor HEIC')); };
+    s.onerror = function() { rej(new Error('Falha a carregar heic2any')); };
     document.head.appendChild(s);
   });
   return _heic2anyP;
 }
-function _ehHeicFile(f) {
-  if (!f) return false;
-  var t = (f.type || '').toLowerCase();
-  if (t === 'image/heic' || t === 'image/heif' || t === 'image/heic-sequence' || t === 'image/heif-sequence') return true;
-  return /\.(heic|heif)$/i.test(f.name || '');
+function _normalizarBlobParaFile(origFile, result) {
+  var blob = Array.isArray(result) ? result[0] : result;
+  var base = (origFile.name || 'foto').replace(/\.(heic|heif|heic-sequence|heif-sequence)$/i, '');
+  return new File([blob], base + '.jpg', { type: 'image/jpeg', lastModified: Date.now() });
 }
+// Converte HEIC → JPEG. Tenta heic-to primeiro (libheif moderno); se falhar
+// com ERR_LIBHEIF ou outro erro, faz fallback para heic2any (legacy).
 function _converterHeic(f) {
-  return _heicCarregar().then(function(lib) {
-    return lib({ blob: f, toType: 'image/jpeg', quality: 0.92 });
-  }).then(function(r) {
-    var b = Array.isArray(r) ? r[0] : r;
-    var base = (f.name || 'foto').replace(/\.(heic|heif|heic-sequence|heif-sequence)$/i, '');
-    return new File([b], base + '.jpg', { type: 'image/jpeg', lastModified: Date.now() });
-  });
+  return _carregarHeicTo()
+    .then(function(heicToFn) { return heicToFn({ blob: f, type: 'image/jpeg', quality: 0.92 }); })
+    .then(function(r) { return _normalizarBlobParaFile(f, r); })
+    .catch(function(err1) {
+      var msg = (err1 && err1.message) ? err1.message : String(err1);
+      console.warn('heic-to falhou, fallback para heic2any:', msg);
+      return _carregarHeic2any()
+        .then(function(lib) { return lib({ blob: f, toType: 'image/jpeg', quality: 0.92 }); })
+        .then(function(r) { return _normalizarBlobParaFile(f, r); })
+        .catch(function(err2) {
+          var m2 = (err2 && err2.message) ? err2.message : String(err2);
+          var combined = 'Não consigo descodificar este HEIC. Tenta: 1) actualizar para iOS 17+, ou 2) iPhone → Definições → Câmara → Formatos → "Mais Compatível", ou 3) abre a foto no Mac/PC e guarda como JPG. (' + m2 + ')';
+          throw new Error(combined);
+        });
+    });
 }
 // Expor para handlers que queiram chamar explicitamente (ex.: perfil.html)
 window.CPCVHeic = { ehHeic: _ehHeicFile, converter: _converterHeic };
