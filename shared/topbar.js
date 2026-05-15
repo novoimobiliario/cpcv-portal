@@ -12,6 +12,146 @@
  */
 (function() {
 'use strict';
+
+// ════════════════════════════════════════════════════════════════════════
+// HEIC / HEIF · interceptor global
+// ────────────────────────────────────────────────────────────────────────
+// Chrome/Firefox/Edge não descodificam HEIC nativamente. Quando o user
+// escolhe um .heic em QUALQUER <input type="file"> (em qualquer página do
+// portal), este interceptor converte para JPEG transparentemente antes do
+// handler original ver o ficheiro. Também adiciona .heic/.heif ao accept
+// de inputs com filtro restritivo, em runtime (cobre inputs criados por
+// template strings).
+// ════════════════════════════════════════════════════════════════════════
+var _heic2anyP = null;
+function _heicCarregar() {
+  if (_heic2anyP) return _heic2anyP;
+  _heic2anyP = new Promise(function(res, rej) {
+    if (window.heic2any) return res(window.heic2any);
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+    s.async = true;
+    s.onload = function() { window.heic2any ? res(window.heic2any) : rej(new Error('heic2any indisponível')); };
+    s.onerror = function() { rej(new Error('Falha a carregar conversor HEIC')); };
+    document.head.appendChild(s);
+  });
+  return _heic2anyP;
+}
+function _ehHeicFile(f) {
+  if (!f) return false;
+  var t = (f.type || '').toLowerCase();
+  if (t === 'image/heic' || t === 'image/heif' || t === 'image/heic-sequence' || t === 'image/heif-sequence') return true;
+  return /\.(heic|heif)$/i.test(f.name || '');
+}
+function _converterHeic(f) {
+  return _heicCarregar().then(function(lib) {
+    return lib({ blob: f, toType: 'image/jpeg', quality: 0.92 });
+  }).then(function(r) {
+    var b = Array.isArray(r) ? r[0] : r;
+    var base = (f.name || 'foto').replace(/\.(heic|heif|heic-sequence|heif-sequence)$/i, '');
+    return new File([b], base + '.jpg', { type: 'image/jpeg', lastModified: Date.now() });
+  });
+}
+// Expor para handlers que queiram chamar explicitamente (ex.: perfil.html)
+window.CPCVHeic = { ehHeic: _ehHeicFile, converter: _converterHeic };
+
+// Interceptor global do evento `change` — capture phase para correr ANTES
+// de qualquer handler inline ou registado pela página.
+var _heicProcessando = new WeakSet();
+document.addEventListener('change', function(ev) {
+  var inp = ev.target;
+  if (!(inp instanceof HTMLInputElement) || inp.type !== 'file') return;
+  if (_heicProcessando.has(inp)) return;
+  var files = inp.files;
+  if (!files || !files.length) return;
+  var temHeic = false;
+  for (var i = 0; i < files.length; i++) if (_ehHeicFile(files[i])) { temHeic = true; break; }
+  if (!temHeic) return;
+  // Bloqueia handlers originais
+  ev.stopImmediatePropagation();
+  ev.preventDefault();
+  _heicProcessando.add(inp);
+  // Pequena nota visual a indicar conversão em curso
+  var label = (inp.closest && inp.closest('label,div')) || inp.parentNode;
+  var hint = null;
+  try {
+    hint = document.createElement('span');
+    hint.textContent = ' (a converter HEIC…)';
+    hint.style.cssText = 'font-size:11px;color:#a8a5a0;margin-left:6px;font-family:DM Sans,sans-serif';
+    if (label) label.appendChild(hint);
+  } catch(e) {}
+  // Converter cada ficheiro HEIC (mantém JPEGs/PNGs intactos)
+  var promises = [];
+  for (var j = 0; j < files.length; j++) {
+    (function(f) {
+      promises.push(_ehHeicFile(f) ? _converterHeic(f) : Promise.resolve(f));
+    })(files[j]);
+  }
+  Promise.all(promises).then(function(arr) {
+    try {
+      var dt = new DataTransfer();
+      arr.forEach(function(f) { dt.items.add(f); });
+      inp.files = dt.files;
+    } catch (e) {
+      console.warn('Conversão HEIC · DataTransfer falhou:', e);
+      alert('Não foi possível ler o ficheiro HEIC: ' + (e.message || e));
+      _heicProcessando.delete(inp);
+      if (hint && hint.parentNode) hint.parentNode.removeChild(hint);
+      return;
+    }
+    if (hint && hint.parentNode) hint.parentNode.removeChild(hint);
+    _heicProcessando.delete(inp);
+    // Re-dispara para os handlers originais — agora com JPEG
+    inp.dispatchEvent(new Event('change', { bubbles: true }));
+  }).catch(function(e) {
+    console.warn('Conversão HEIC falhou:', e);
+    alert('Não foi possível ler o ficheiro HEIC: ' + (e.message || e));
+    _heicProcessando.delete(inp);
+    if (hint && hint.parentNode) hint.parentNode.removeChild(hint);
+  });
+}, true);
+
+// Extensão automática do `accept` em inputs restritivos (ex.: image/jpeg,
+// image/png,image/webp) para o diálogo do browser também mostrar HEIC.
+function _heicExtenderAccept(inp) {
+  if (!inp || !(inp instanceof HTMLInputElement) || inp.type !== 'file') return;
+  var a = inp.accept || '';
+  var al = a.toLowerCase();
+  if (!a) return; // sem accept = aceita tudo, nada a fazer
+  if (al.indexOf('image/*') >= 0) return; // já é amplo
+  // Só extender se já aceita formatos de imagem
+  if (!/image\/|\.jpe?g|\.png|\.webp|\.gif/i.test(al)) return;
+  if (al.indexOf('heic') >= 0) return; // já tem
+  inp.accept = a + (a.charAt(a.length-1) === ',' ? '' : ',') + 'image/heic,image/heif,.heic,.heif';
+}
+function _heicPatchAll() {
+  var inputs = document.querySelectorAll('input[type="file"]');
+  for (var i = 0; i < inputs.length; i++) _heicExtenderAccept(inputs[i]);
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _heicPatchAll);
+} else {
+  _heicPatchAll();
+}
+// Inputs criados dinamicamente (template strings nos exercícios)
+function _heicSetupMO() {
+  var mo = new MutationObserver(function(muts) {
+    muts.forEach(function(m) {
+      m.addedNodes.forEach(function(n) {
+        if (n.nodeType !== 1) return;
+        if (n.matches && n.matches('input[type="file"]')) _heicExtenderAccept(n);
+        if (n.querySelectorAll) {
+          var nested = n.querySelectorAll('input[type="file"]');
+          for (var i = 0; i < nested.length; i++) _heicExtenderAccept(nested[i]);
+        }
+      });
+    });
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
+}
+if (document.body) _heicSetupMO();
+else document.addEventListener('DOMContentLoaded', _heicSetupMO);
+
 // ── CSS ──────────────────────────────────────────────────────────────────
 const CSS = `/* ══ CPCV TOPBAR ══ */ .cpcv-topbar {   height: 56px;   background: var(--bg, #141413);   border-bottom: 1px solid var(--border, rgba(255,255,255,0.10));   display: flex;   align-items: center;   padding: 0 28px;   gap: 20px;   position: sticky;   top: 0;   z-index: 100;   flex-shrink: 0;   font-family: 'DM Sans', sans-serif; } .cpcv-topbar * { box-sizing: border-box; } .cpcv-tb-logo {   display: flex;   align-items: center;   gap: 10px;   flex-shrink: 0;   cursor: pointer;   text-decoration: none; } .cpcv-tb-logo-icon {   width: 28px; height: 28px;   border-radius: 6px;   background: #111;   border: 1px solid var(--border, rgba(255,255,255,0.10));   display: flex; align-items: center; justify-content: center;   overflow: hidden; } .cpcv-tb-logo-icon img {   width: 18px; height: 18px;   object-fit: contain;   filter: brightness(0) invert(1); } .cpcv-tb-logo-name {   font-size: 13px;   font-weight: 500;   color: var(--text, #f0ede8);   letter-spacing: -0.01em;   white-space: nowrap; } .cpcv-tb-logo-name span { color: var(--accent, #c9a96e); font-weight: 300; } .cpcv-tb-nav {   margin-left: auto;   display: flex;   align-items: center;   gap: 2px; } .cpcv-tb-btn {   padding: 5px 12px;   border-radius: 6px;   font-size: 13px;   color: var(--text-muted, #a8a5a0);   background: none;   border: none;   cursor: pointer;   font-family: inherit;   transition: color .12s, background .12s; } .cpcv-tb-btn:hover { color: var(--text, #f0ede8); background: var(--bg3, #1c1c1a); } .cpcv-tb-btn.active {   color: var(--accent, #c9a96e);   background: rgba(201,169,110,0.06);   font-weight: 500; } .cpcv-tb-cred {   display: flex;   align-items: center;   gap: 8px;   background: var(--bg2, #141413);   border: 1px solid var(--border, rgba(255,255,255,0.10));   border-radius: 8px;   padding: 4px 10px;   font-family: 'DM Mono', monospace; } .cpcv-tb-cred-icon { font-size: 13px; } .cpcv-tb-cred-preview {   display: none;   font-size: 10px;   color: #e05c5c;   padding: 1px 5px;   background: rgba(224,92,92,0.12);   border-radius: 3px; } .cpcv-tb-cred-val {   font-size: 12px;   font-weight: 500;   color: var(--accent, #c9a96e);   white-space: nowrap; } .cpcv-tb-cred-btn {   height: 22px;   padding: 0 10px;   background: var(--accent, #c9a96e);   color: #0c0c0b;   border: none;   border-radius: 4px;   font-size: 11px;   font-weight: 500;   cursor: pointer;   font-family: inherit; } .cpcv-tb-cred-btn:hover { opacity: 0.85; } .cpcv-tb-avatar {   width: 28px; height: 28px;   border-radius: 50%;   background: var(--bg3, #1c1c1a);   border: 1px solid var(--border, rgba(255,255,255,0.10));   display: flex; align-items: center; justify-content: center;   font-size: 10px;   font-weight: 500;   color: var(--text-muted, #a8a5a0);   font-family: 'DM Mono', monospace;   cursor: pointer;   flex-shrink: 0; } .cpcv-tb-back {   width: 28px; height: 28px;   border-radius: 6px;   background: none;   border: 1px solid var(--border, rgba(255,255,255,0.10));   color: var(--text-muted, #a8a5a0);   cursor: pointer;   display: flex; align-items: center; justify-content: center;   transition: color .12s, border-color .12s;   flex-shrink: 0; } .cpcv-tb-perfil {   display: flex;   align-items: center;   gap: 7px;   cursor: pointer; } .cpcv-tb-perfil-label {   font-size: 13px;   color: var(--text-muted, #a8a5a0);   white-space: nowrap;   transition: color .12s; } .cpcv-tb-perfil:hover .cpcv-tb-perfil-label { color: var(--text, #f0ede8); } .cpcv-tb-perfil:hover .cpcv-tb-avatar { border-color: var(--accent, #c9a96e); } .cpcv-tb-back:hover { color: #e06060; border-color: rgba(224,96,96,0.3); }`;
 // ── HTML ─────────────────────────────────────────────────────────────────
