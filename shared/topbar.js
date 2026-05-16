@@ -278,15 +278,6 @@ return `<div class="cpcv-topbar" id="cpcv-topbar">
       <path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3M10 11l3-3-3-3M13 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </button>
-  <button class="cpcv-hb-btn" id="cpcv-hb-btn" onclick="CPCVTopbar._toggleHamburguer(event)" title="Menu" aria-label="Abrir menu">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-  </button>
-  <div class="cpcv-hb-menu" id="cpcv-hb-menu" role="menu">
-    <button class="cpcv-hb-item" onclick="window.location.href='/ligacoes.html'"><span class="ic">🔗</span><span>Ligações úteis</span></button>
-    <button class="cpcv-hb-item" onclick="window.location.href='/perfil.html'"><span class="ic">👤</span><span>O meu perfil</span></button>
-    <div class="cpcv-hb-sep"></div>
-    <button class="cpcv-hb-item danger" onclick="CPCVTopbar.confirmarLogout()"><span class="ic">🚪</span><span>Terminar sessão</span></button>
-  </div>
 </div>`;
 }
 // ── API PÚBLICA ───────────────────────────────────────────────────────────
@@ -554,7 +545,6 @@ init: function(opts) {
   root.parentNode.insertBefore(wrapper.firstElementChild, root.nextSibling);
   if (opts.onComprar) this._onComprar = opts.onComprar;
   if (opts.onAvatar) this._onAvatar = opts.onAvatar;
-  this._hamburguerSetupListeners();
 },
 
 setCreditos: function(creditos, acessoIlimitado) {
@@ -647,28 +637,6 @@ confirmarLogout: function() {
   }
 },
 
-// Hamburguer menu (mobile) · toggle open/close
-_toggleHamburguer: function(ev) {
-  if (ev && ev.stopPropagation) ev.stopPropagation();
-  var menu = document.getElementById('cpcv-hb-menu');
-  if (menu) menu.classList.toggle('open');
-},
-_hamburguerSetupListeners: function() {
-  if (CPCVTopbar._hbListenersOn) return;
-  CPCVTopbar._hbListenersOn = true;
-  document.addEventListener('click', function(ev){
-    var menu = document.getElementById('cpcv-hb-menu');
-    var btn  = document.getElementById('cpcv-hb-btn');
-    if (!menu || !menu.classList.contains('open')) return;
-    if (menu.contains(ev.target) || (btn && btn.contains(ev.target))) return;
-    menu.classList.remove('open');
-  });
-  document.addEventListener('keydown', function(ev){
-    if (ev.key !== 'Escape') return;
-    var menu = document.getElementById('cpcv-hb-menu');
-    if (menu) menu.classList.remove('open');
-  });
-},
 
 setEmail: function(email) {
   CPCVTopbar._email = email;
