@@ -246,7 +246,7 @@ if (document.body) _heicSetupMO();
 else document.addEventListener('DOMContentLoaded', _heicSetupMO);
 
 // ── CSS ──────────────────────────────────────────────────────────────────
-const CSS = `/* ══ CPCV TOPBAR ══ */ .cpcv-topbar {   height: 56px;   background: var(--bg, #141413);   border-bottom: 1px solid var(--border, rgba(255,255,255,0.10));   display: flex;   align-items: center;   padding: 0 28px;   gap: 20px;   position: sticky;   top: 0;   z-index: 100;   flex-shrink: 0;   font-family: 'DM Sans', sans-serif; } .cpcv-topbar * { box-sizing: border-box; } .cpcv-tb-logo {   display: flex;   align-items: center;   gap: 10px;   flex-shrink: 0;   cursor: pointer;   text-decoration: none; } .cpcv-tb-logo-icon {   width: 28px; height: 28px;   border-radius: 6px;   background: #111;   border: 1px solid var(--border, rgba(255,255,255,0.10));   display: flex; align-items: center; justify-content: center;   overflow: hidden; } .cpcv-tb-logo-icon img {   width: 18px; height: 18px;   object-fit: contain;   filter: brightness(0) invert(1); } .cpcv-tb-logo-name {   font-size: 13px;   font-weight: 500;   color: var(--text, #f0ede8);   letter-spacing: -0.01em;   white-space: nowrap; } .cpcv-tb-logo-name span { color: var(--accent, #c9a96e); font-weight: 300; } .cpcv-tb-nav {   margin-left: auto;   display: flex;   align-items: center;   gap: 2px; } .cpcv-tb-btn {   padding: 5px 12px;   border-radius: 6px;   font-size: 13px;   color: var(--text-muted, #a8a5a0);   background: none;   border: none;   cursor: pointer;   font-family: inherit;   transition: color .12s, background .12s; } .cpcv-tb-btn:hover { color: var(--text, #f0ede8); background: var(--bg3, #1c1c1a); } .cpcv-tb-btn.active {   color: var(--accent, #c9a96e);   background: rgba(201,169,110,0.06);   font-weight: 500; } .cpcv-tb-cred {   display: flex;   align-items: center;   gap: 8px;   background: var(--bg2, #141413);   border: 1px solid var(--border, rgba(255,255,255,0.10));   border-radius: 8px;   padding: 4px 10px;   font-family: 'DM Mono', monospace; } .cpcv-tb-cred-icon { font-size: 13px; } .cpcv-tb-cred-preview {   display: none;   font-size: 10px;   color: #e05c5c;   padding: 1px 5px;   background: rgba(224,92,92,0.12);   border-radius: 3px; } .cpcv-tb-cred-val {   font-size: 12px;   font-weight: 500;   color: var(--accent, #c9a96e);   white-space: nowrap; } .cpcv-tb-cred-btn {   height: 22px;   padding: 0 10px;   background: var(--accent, #c9a96e);   color: #0c0c0b;   border: none;   border-radius: 4px;   font-size: 11px;   font-weight: 500;   cursor: pointer;   font-family: inherit; } .cpcv-tb-cred-btn:hover { opacity: 0.85; } .cpcv-tb-avatar {   width: 28px; height: 28px;   border-radius: 50%;   background: var(--bg3, #1c1c1a);   border: 1px solid var(--border, rgba(255,255,255,0.10));   display: flex; align-items: center; justify-content: center;   font-size: 10px;   font-weight: 500;   color: var(--text-muted, #a8a5a0);   font-family: 'DM Mono', monospace;   cursor: pointer;   flex-shrink: 0; } .cpcv-tb-back {   width: 28px; height: 28px;   border-radius: 6px;   background: none;   border: 1px solid var(--border, rgba(255,255,255,0.10));   color: var(--text-muted, #a8a5a0);   cursor: pointer;   display: flex; align-items: center; justify-content: center;   transition: color .12s, border-color .12s;   flex-shrink: 0; } .cpcv-tb-perfil {   display: flex;   align-items: center;   gap: 7px;   cursor: pointer; } .cpcv-tb-perfil-label {   font-size: 13px;   color: var(--text-muted, #a8a5a0);   white-space: nowrap;   transition: color .12s; } .cpcv-tb-perfil:hover .cpcv-tb-perfil-label { color: var(--text, #f0ede8); } .cpcv-tb-perfil:hover .cpcv-tb-avatar { border-color: var(--accent, #c9a96e); } .cpcv-tb-back:hover { color: #e06060; border-color: rgba(224,96,96,0.3); }`;
+const CSS = `/* ══ CPCV TOPBAR ══ */ .cpcv-topbar {   height: 56px;   background: var(--bg, #141413);   border-bottom: 1px solid var(--border, rgba(255,255,255,0.10));   display: flex;   align-items: center;   padding: 0 28px;   gap: 20px;   position: sticky;   top: 0;   z-index: 100;   flex-shrink: 0;   font-family: 'DM Sans', sans-serif; } .cpcv-topbar * { box-sizing: border-box; } .cpcv-tb-logo {   display: flex;   align-items: center;   gap: 10px;   flex-shrink: 0;   cursor: pointer;   text-decoration: none; } .cpcv-tb-logo-icon {   width: 28px; height: 28px;   border-radius: 6px;   background: #111;   border: 1px solid var(--border, rgba(255,255,255,0.10));   display: flex; align-items: center; justify-content: center;   overflow: hidden; } .cpcv-tb-logo-icon img {   width: 18px; height: 18px;   object-fit: contain;   filter: brightness(0) invert(1); } .cpcv-tb-logo-name {   font-size: 13px;   font-weight: 500;   color: var(--text, #f0ede8);   letter-spacing: -0.01em;   white-space: nowrap; } .cpcv-tb-logo-name span { color: var(--accent, #c9a96e); font-weight: 300; } .cpcv-tb-nav {   margin-left: auto;   display: flex;   align-items: center;   gap: 2px; } .cpcv-tb-btn {   padding: 5px 12px;   border-radius: 6px;   font-size: 13px;   color: var(--text-muted, #a8a5a0);   background: none;   border: none;   cursor: pointer;   font-family: inherit;   transition: color .12s, background .12s; } .cpcv-tb-btn:hover { color: var(--text, #f0ede8); background: var(--bg3, #1c1c1a); } .cpcv-tb-btn.active {   color: var(--accent, #c9a96e);   background: rgba(201,169,110,0.06);   font-weight: 500; } .cpcv-tb-cred {   display: flex;   align-items: center;   gap: 8px;   background: var(--bg2, #141413);   border: 1px solid var(--border, rgba(255,255,255,0.10));   border-radius: 8px;   padding: 4px 10px;   font-family: 'DM Mono', monospace; } .cpcv-tb-cred-icon { font-size: 13px; } .cpcv-tb-cred-preview {   display: none;   font-size: 10px;   color: #e05c5c;   padding: 1px 5px;   background: rgba(224,92,92,0.12);   border-radius: 3px; } .cpcv-tb-cred-val {   font-size: 12px;   font-weight: 500;   color: var(--accent, #c9a96e);   white-space: nowrap; } .cpcv-tb-cred-btn {   height: 22px;   padding: 0 10px;   background: var(--accent, #c9a96e);   color: #0c0c0b;   border: none;   border-radius: 4px;   font-size: 11px;   font-weight: 500;   cursor: pointer;   font-family: inherit; } .cpcv-tb-cred-btn:hover { opacity: 0.85; } .cpcv-tb-avatar {   width: 28px; height: 28px;   border-radius: 50%;   background: var(--bg3, #1c1c1a);   border: 1px solid var(--border, rgba(255,255,255,0.10));   display: flex; align-items: center; justify-content: center;   font-size: 10px;   font-weight: 500;   color: var(--text-muted, #a8a5a0);   font-family: 'DM Mono', monospace;   cursor: pointer;   flex-shrink: 0;   overflow: hidden;   position: relative; } .cpcv-tb-avatar img {   width: 100%; height: 100%;   object-fit: cover;   display: block; } .cpcv-tb-logout {   width: 28px; height: 28px;   border-radius: 6px;   background: none;   border: 1px solid var(--border, rgba(255,255,255,0.10));   color: var(--text-muted, #a8a5a0);   cursor: pointer;   display: flex; align-items: center; justify-content: center;   transition: color .12s, border-color .12s;   flex-shrink: 0;   margin-left: 6px; } .cpcv-tb-perfil {   display: flex;   align-items: center;   gap: 7px;   cursor: pointer; } .cpcv-tb-perfil-label {   font-size: 13px;   color: var(--text-muted, #a8a5a0);   white-space: nowrap;   transition: color .12s; } .cpcv-tb-perfil:hover .cpcv-tb-perfil-label { color: var(--text, #f0ede8); } .cpcv-tb-perfil:hover .cpcv-tb-avatar { border-color: var(--accent, #c9a96e); } .cpcv-tb-logout:hover { color: var(--danger, #e06060); border-color: var(--danger, #e06060); }`;
 // ── HTML ─────────────────────────────────────────────────────────────────
 function buildHTML(opts) {
 return `<div class="cpcv-topbar" id="cpcv-topbar">
@@ -267,12 +267,15 @@ return `<div class="cpcv-topbar" id="cpcv-topbar">
     <button class="cpcv-tb-cred-btn" id="cpcv-tb-cred-btn" onclick="CPCVTopbar._onComprar()">Comprar</button>
   </div>
   <div class="cpcv-tb-perfil" onclick="CPCVTopbar._onAvatar()" title="O meu perfil">
-    <div class="cpcv-tb-avatar" id="cpcv-tb-avatar">??</div>
+    <div class="cpcv-tb-avatar" id="cpcv-tb-avatar">
+      <img id="cpcv-tb-avatar-img" alt="" style="display:none">
+      <span id="cpcv-tb-avatar-initials">??</span>
+    </div>
     <span class="cpcv-tb-perfil-label">Perfil</span>
   </div>
-  <button class="cpcv-tb-back" onclick="history.back()" title="Voltar ao portal">
+  <button class="cpcv-tb-logout" onclick="CPCVTopbar.confirmarLogout()" title="Terminar sessão">
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M10 14H13a1 1 0 001-1V3a1 1 0 00-1-1h-3M6 11l-3-3 3-3M3 8h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3M10 11l3-3-3-3M13 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </button>
 </div>`;
@@ -582,9 +585,56 @@ hidePreview: function() {
   if (el) el.style.display = 'none';
 },
 
-setAvatar: function(nome) {
-  const el = document.getElementById('cpcv-tb-avatar');
-  if (el && nome) el.textContent = nome.split(' ').map(p => p[0]).join('').substring(0,2).toUpperCase();
+setAvatar: function(nome, fotoUrl) {
+  // Compat: aceita string (só nome) ou (nome, fotoUrl)
+  // Se fotoUrl válido → mostra <img>; senão iniciais do 1.º + último nome
+  const img = document.getElementById('cpcv-tb-avatar-img');
+  const initialsEl = document.getElementById('cpcv-tb-avatar-initials');
+  if (!initialsEl && !img) {
+    // Fallback para layout legacy (avatar simples sem img)
+    const el = document.getElementById('cpcv-tb-avatar');
+    if (el && nome) el.textContent = String(nome).split(' ').map(p => p[0]).join('').substring(0,2).toUpperCase();
+    return;
+  }
+  if (fotoUrl && img) {
+    img.src = fotoUrl;
+    img.onload = function(){
+      img.style.display = 'block';
+      if (initialsEl) initialsEl.style.display = 'none';
+    };
+    img.onerror = function(){
+      img.style.display = 'none';
+      if (initialsEl) initialsEl.style.display = '';
+    };
+  } else if (img) {
+    img.style.display = 'none';
+    img.removeAttribute('src');
+    if (initialsEl) initialsEl.style.display = '';
+  }
+  if (initialsEl && nome) {
+    const partes = String(nome).trim().split(/\s+/);
+    const ini = ((partes[0] || '')[0] || '') + ((partes[partes.length-1] || '')[0] || '');
+    initialsEl.textContent = (ini.toUpperCase() || '??').substring(0,2);
+  }
+},
+
+// Confirmação de logout com window.confirm + signOut do Supabase
+confirmarLogout: function() {
+  if (!window.confirm('Tens a certeza que queres terminar sessão?')) return;
+  try {
+    var sb = window.sb || (window.CPCV && window.CPCV.sb);
+    if (sb && sb.auth && sb.auth.signOut) {
+      sb.auth.signOut().then(function(){
+        window.location.href = '/portal.html';
+      }).catch(function(){
+        window.location.href = '/portal.html';
+      });
+    } else {
+      window.location.href = '/portal.html';
+    }
+  } catch(e) {
+    window.location.href = '/portal.html';
+  }
 },
 
 setEmail: function(email) {
