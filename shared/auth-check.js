@@ -179,7 +179,7 @@
 
   function carregarMentorado(sb, session) {
     sb.from('mentorados')
-      .select('nome,role,creditos_ia,acesso_ia,telefone,email,foto_url,logo_url,logo_url_claro,nome_equipa')
+      .select('nome,nome_completo,role,creditos_ia,acesso_ia,telefone,email,foto_url,logo_url,logo_url_claro,nome_equipa,data_nascimento,agencia,numerologia')
       .eq('user_id', session.user.id)
       .maybeSingle()
       .then(function(res) {
