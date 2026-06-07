@@ -768,7 +768,7 @@ _abrirConfirmModal: function(creditosEst, creditosActuais, ilimitado, mult, toke
     + '<div style="font-size:12px;color:var(--text-faint,#4a4845);margin-bottom:18px;padding:10px 14px;background:var(--bg3,#1c1c1a);border-radius:8px;border:1px solid rgba(255,255,255,.07);line-height:1.6">'
       + saldoHTML + multInfo
     + '</div>'
-    + '<label id="cpcv-confirm-skip-wrap" style="display:flex;align-items:center;gap:8px;margin-bottom:18px;cursor:pointer;user-select:none;font-size:12px;color:var(--text-faint,#4a4845)">'
+    + '<label id="cpcv-confirm-skip-wrap" style="display:inline-flex;align-items:center;gap:8px;margin-bottom:22px;align-self:flex-start;cursor:pointer;user-select:none;font-size:12px;color:var(--text-faint,#4a4845)">'
       + '<input type="checkbox" id="cpcv-confirm-skip" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent,#c9a96e)">'
       + '<span>Não ver mais estes avisos <span style="opacity:.6">(podes reactivar no perfil)</span></span>'
     + '</label>'
