@@ -669,6 +669,28 @@ mostrarBloqueio: function(tipo) {
 },
 
 // ── Confirmação IA ───────────────────────────────────────────────────────
+_pcCache: { t: 0, config: null, saldo: null, ferr: {} },
+
+// Aquecer a cache do modal de confirmação (chamar no init da página c/ as ferramentas usadas)
+prewarmConfirmacao: async function(ferramentas) {
+  try {
+    var sb = window.CPCV && window.CPCV.sb;
+    var user = window.CPCV && window.CPCV.currentUser;
+    if (!sb || !user) return;
+    var lista = Array.isArray(ferramentas) ? ferramentas : [];
+    var proms = [
+      sb.from('configuracoes').select('valor').eq('chave','multiplicador_creditos').maybeSingle(),
+      sb.from('mentorados').select('creditos_ia,acesso_ia,skip_confirmacao_ia').eq('user_id', user.id).maybeSingle()
+    ].concat(lista.map(function(f){ return sb.from('ferramentas_ia').select('creditos_fixo').eq('ferramenta', f).maybeSingle(); }));
+    var r = await Promise.all(proms);
+    var C = CPCVTopbar._pcCache;
+    C.t = Date.now();
+    C.config = r[0].data || null;
+    C.saldo = r[1].data || null;
+    lista.forEach(function(f, i){ C.ferr[f] = r[2 + i] ? r[2 + i].data : null; });
+  } catch(e) { /* prewarm é oportunista */ }
+},
+
 pedirConfirmacao: async function(textoPrompt, callback, opcoes) {
   var msgElId = opcoes && opcoes.msgElId;
   var tokensOut = (opcoes && opcoes.tokensOutputEstimado) || 1500;
@@ -682,14 +704,21 @@ pedirConfirmacao: async function(textoPrompt, callback, opcoes) {
     if (!sb || !user) { if (callback) callback(); return; }
 
     // Queries paralelas: config + mentorado + lookup ferramenta (se fornecida)
+    // Cache 45s (v1.5): evita 3 round-trips por clique · prewarmConfirmacao() aquece no init
+    var C = CPCVTopbar._pcCache;
+    var now = Date.now();
+    if (now - C.t > 45000) { C.config = null; C.saldo = null; C.ferr = {}; C.t = now; }
     var queries = [
-      sb.from('configuracoes').select('valor').eq('chave','multiplicador_creditos').maybeSingle(),
-      sb.from('mentorados').select('creditos_ia,acesso_ia,skip_confirmacao_ia').eq('user_id', user.id).maybeSingle()
+      C.config ? Promise.resolve({ data: C.config }) : sb.from('configuracoes').select('valor').eq('chave','multiplicador_creditos').maybeSingle(),
+      C.saldo  ? Promise.resolve({ data: C.saldo })  : sb.from('mentorados').select('creditos_ia,acesso_ia,skip_confirmacao_ia').eq('user_id', user.id).maybeSingle()
     ];
     if (ferramenta) {
-      queries.push(sb.from('ferramentas_ia').select('creditos_fixo').eq('ferramenta', ferramenta).maybeSingle());
+      queries.push((ferramenta in C.ferr) ? Promise.resolve({ data: C.ferr[ferramenta] }) : sb.from('ferramentas_ia').select('creditos_fixo').eq('ferramenta', ferramenta).maybeSingle());
     }
     var results = await Promise.all(queries);
+    C.config = results[0].data || C.config;
+    C.saldo  = results[1].data || C.saldo;
+    if (ferramenta && results[2]) C.ferr[ferramenta] = results[2].data;
 
     var mult = parseFloat(results[0].data && results[0].data.valor || '1') || 1;
     var tokensPorCr = Math.max(1, Math.round(100 / mult));
@@ -896,8 +925,12 @@ reloadCreditos: async function() {
     var sb = window.CPCV && window.CPCV.sb;
     var user = window.CPCV && window.CPCV.currentUser;
     if (!sb || !user) return;
-    var res = await sb.from('mentorados').select('creditos_ia,acesso_ia').eq('user_id', user.id).maybeSingle();
-    if (res.data) CPCVTopbar.setCreditos(res.data.creditos_ia || 0, !!res.data.acesso_ia);
+    var res = await sb.from('mentorados').select('creditos_ia,acesso_ia,skip_confirmacao_ia').eq('user_id', user.id).maybeSingle();
+    if (res.data) {
+      CPCVTopbar.setCreditos(res.data.creditos_ia || 0, !!res.data.acesso_ia);
+      CPCVTopbar._pcCache.saldo = res.data;
+      CPCVTopbar._pcCache.t = Date.now();
+    }
   } catch(e) { console.warn('reloadCreditos:', e.message); }
 }
 };
